@@ -100,7 +100,6 @@ exports.replyMessage = async (req, res) => {
   }
 };
 
-// Agent كيسد conversation
 exports.closeConversation = async (req, res) => {
   try {
     const { conversationId } = req.params;
