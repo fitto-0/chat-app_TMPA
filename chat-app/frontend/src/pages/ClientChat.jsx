@@ -53,12 +53,11 @@ export default function ClientChat() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+    <div className="fixed bottom-4 left-4 right-4 sm:right-6 sm:left-auto z-50 flex flex-col items-end gap-3 sm:items-end">
       {/* Chat Widget */}
       {isOpen && (
         <div
-          className="w-80 bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-slate-100"
-          style={{ height: "480px" }}
+          className="w-full max-w-sm sm:w-80 bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-slate-100 h-[85vh] sm:h-[520px] max-h-[85vh]"
         >
           {/* Header */}
           <div className="bg-blue-500 px-4 py-3 flex items-center justify-between flex-shrink-0">
@@ -77,7 +76,7 @@ export default function ClientChat() {
                   Discutez avec un Agent
                 </p>
                 <p className="text-blue-100 text-xs flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 bg-green-300 rounded-full"></span>
+                  <span className="status-dot status-online"></span>
                   En Ligne
                 </p>
               </div>
@@ -152,14 +151,10 @@ export default function ClientChat() {
                     className={`flex flex-col gap-0.5 max-w-[200px] ${isMe ? "items-end" : "items-start"}`}
                   >
                     <div
-                      className={`px-3 py-2 rounded-2xl text-sm ${
-                        isMe
-                          ? "bg-blue-500 text-white rounded-br-sm"
-                          : "bg-white text-slate-800 shadow-sm rounded-bl-sm"
-                      }`}
-                    >
-                      {msg.contenu}
-                    </div>
+                    className={`chat-bubble ${isMe ? 'sent' : 'received'}`}
+                  >
+                    {msg.contenu}
+                  </div>
                     <span className="text-xs text-slate-400">
                       {new Date(msg.createdAt).toLocaleTimeString("fr-FR", {
                         hour: "2-digit",

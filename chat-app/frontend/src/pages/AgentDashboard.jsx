@@ -8,19 +8,19 @@ const statusColors = {
   pending: {
     bg: "bg-yellow-100",
     text: "text-yellow-700",
-    dot: "bg-yellow-400",
+    dot: "status-dot status-away",
     label: "En attente",
   },
   active: {
     bg: "bg-green-100",
     text: "text-green-700",
-    dot: "bg-green-400",
+    dot: "status-dot status-online",
     label: "En Ligne",
   },
   closed: {
     bg: "bg-gray-100",
     text: "text-gray-500",
-    dot: "bg-gray-400",
+    dot: "status-dot status-offline",
     label: "Fermé",
   },
 };
@@ -351,7 +351,7 @@ export default function AgentDashboard() {
                     {selected.clientId?.nom}
                   </h3>
                   <p className="text-xs text-green-500 font-medium flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 bg-green-400 rounded-full"></span>
+                    <span className="status-dot status-online"></span>
                     Connecté
                   </p>
                 </div>

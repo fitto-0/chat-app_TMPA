@@ -71,3 +71,60 @@ exports.login = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// Admin create agent
+exports.createAgent = async (req, res) => {
+  try {
+    const { nom, email, password } = req.body;
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Email déjà utilisé' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const agent = await User.create({
+      nom,
+      email,
+      password: hashedPassword,
+      role: 'agent'
+    });
+
+    res.status(201).json({ 
+      message: 'Agent créé avec succès',
+      agent: {
+        id: agent._id,
+        nom: agent.nom,
+        email: agent.email,
+        role: agent.role
+      }
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Admin see all agents
+exports.getAgents = async (req, res) => {
+  try {
+    const agents = await User.find({ role: 'agent' })
+      .select('-password')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(agents);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Admin delete agent
+exports.deleteAgent = async (req, res) => {
+  try {
+    await User.findByIdAndDelete(req.params.id);
+    res.status(200).json({ message: 'Agent supprimé' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

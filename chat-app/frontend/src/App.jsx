@@ -1,9 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import Login from "./pages/Login";
-import Register from "./pages/Register";
 import ClientChat from "./pages/ClientChat";
 import AgentDashboard from "./pages/AgentDashboard";
+import "./App.css";
+import AdminDashboard from "./pages/AdminDashboard";
 
 const ProtectedRoute = ({ children, role }) => {
   const { user } = useAuth();
@@ -18,7 +19,6 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
         <Route
           path="/chat"
           element={
@@ -32,6 +32,14 @@ export default function App() {
           element={
             <ProtectedRoute role="agent">
               <AgentDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute role="admin">
+              <AdminDashboard />
             </ProtectedRoute>
           }
         />

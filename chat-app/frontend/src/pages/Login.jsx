@@ -13,19 +13,17 @@ export default function Login() {
     try {
       const res = await axios.post("/auth/login", form);
       login(res.data.user, res.data.token);
-      if (res.data.user.role === "agent") {
-        navigate("/agent");
-      } else {
-        navigate("/chat");
-      }
+      if (res.data.user.role === "admin") navigate("/admin");
+      else if (res.data.user.role === "agent") navigate("/agent");
+      else navigate("/chat");
     } catch (err) {
       setError("Email ou mot de passe incorrect");
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-md w-96">
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
+      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
         <h2 className="text-2xl font-bold text-center mb-6">Connexion</h2>
         {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -48,12 +46,6 @@ export default function Login() {
             Se connecter
           </button>
         </form>
-        <p className="text-center mt-4 text-sm">
-          Pas de compte?{" "}
-          <Link to="/register" className="text-blue-500">
-            S'inscrire
-          </Link>
-        </p>
       </div>
     </div>
   );
