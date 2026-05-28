@@ -67,12 +67,20 @@ export default function ClientChat() {
   return (
     <div className="widget-page">
       {!isOpen ? (
-        <button 
-          className="widget-toggle hover:scale-105 active:scale-95 animate-scale-in" 
+        <button
+          className="widget-toggle hover:scale-105 active:scale-95 animate-scale-in"
           onClick={() => setIsOpen(true)}
           title="Ouvrir le support"
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="35px">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="white"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            width="35px"
+          >
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
         </button>
@@ -83,7 +91,14 @@ export default function ClientChat() {
             <div className="widget-header">
               <div className="widget-header-info">
                 <div className="widget-header-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="white"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                   </svg>
                 </div>
@@ -91,18 +106,36 @@ export default function ClientChat() {
                   <h3>Support en direct</h3>
                   <span>
                     <span className="online-dot" />
-                    En ligne — réponse rapide
+                    En ligne - réponse rapide
                   </span>
                 </div>
               </div>
               <div className="widget-actions">
-                <button onClick={() => setIsOpen(false)} title="Réduire" style={{ marginRight: '0.2rem' }}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <button
+                  onClick={() => setIsOpen(false)}
+                  title="Réduire"
+                  style={{ marginRight: "0.2rem" }}
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <polyline points="6 9 12 15 18 9" />
                   </svg>
                 </button>
                 <button onClick={handleLogout} title="Déconnexion">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                     <polyline points="16 17 21 12 16 7" />
                     <line x1="21" y1="12" x2="9" y2="12" />
@@ -116,8 +149,11 @@ export default function ClientChat() {
               <div className="widget-welcome-card">
                 <h4>Bienvenue, {user.nom} 👋</h4>
                 <p>
-                  Vous êtes connecté en tant que <strong style={{ color: "var(--accent-light)" }}>{user.role}</strong>.
-                  Envoyez un message pour démarrer la conversation.
+                  Vous êtes connecté en tant que{" "}
+                  <strong style={{ color: "var(--accent-light)" }}>
+                    {user.role}
+                  </strong>
+                  . Envoyez un message pour démarrer la conversation.
                 </p>
               </div>
             </div>
@@ -127,16 +163,27 @@ export default function ClientChat() {
               {messages.length === 0 ? (
                 <div className="widget-empty">
                   <div className="widget-empty-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
                       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                     </svg>
                   </div>
                   <h4>Prêt à vous aider</h4>
-                  <p>Tapez votre question ci-dessous pour contacter un agent de support.</p>
+                  <p>
+                    Tapez votre question ci-dessous pour contacter un agent de
+                    support.
+                  </p>
                 </div>
               ) : (
                 messages.map((msg, idx) => {
-                  const isMe = msg.senderId === user.id || msg.senderId?._id === user.id;
+                  const isMe =
+                    msg.senderId === user.id || msg.senderId?._id === user.id;
                   return (
                     <div
                       key={msg._id || idx}
@@ -146,12 +193,18 @@ export default function ClientChat() {
                       {!isMe && (
                         <div
                           className="avatar avatar-sm"
-                          style={{ background: "linear-gradient(135deg, #14b8a6, #0d9488)", fontSize: "0.7rem" }}
+                          style={{
+                            background:
+                              "linear-gradient(135deg, #14b8a6, #0d9488)",
+                            fontSize: "0.7rem",
+                          }}
                         >
                           A
                         </div>
                       )}
-                      <div className={`chat-bubble ${isMe ? "sent" : "received"}`}>
+                      <div
+                        className={`chat-bubble ${isMe ? "sent" : "received"}`}
+                      >
                         {msg.contenu}
                       </div>
                     </div>
@@ -186,7 +239,10 @@ export default function ClientChat() {
                   disabled={!contenu.trim() || isClosed || loading}
                 >
                   {loading ? (
-                    <span className="spinner" style={{ width: 14, height: 14, borderWidth: "1.5px" }} />
+                    <span
+                      className="spinner"
+                      style={{ width: 14, height: 14, borderWidth: "1.5px" }}
+                    />
                   ) : (
                     <svg viewBox="0 0 24 24">
                       <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
