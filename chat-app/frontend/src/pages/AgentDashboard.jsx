@@ -4,39 +4,22 @@ import socket from "../socket/socket";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
-const statusStyles = {
-  pending: "status-away text-yellow-700 bg-yellow-50",
-  active: "status-online text-green-700 bg-green-50",
-  closed: "status-offline text-slate-500 bg-slate-100",
-};
-
-const priorityStyles = {
-  low: "priority-low",
-  normal: "priority-normal",
-  high: "priority-high",
-};
+const AVATAR_COLORS = ["#6366f1", "#8b5cf6", "#ec4899", "#14b8a6", "#f59e0b", "#ef4444", "#06b6d4"];
 
 function Avatar({ name = "?", size = "md" }) {
-  const colors = ["#2563eb", "#8b5cf6", "#ec4899", "#14b8a6", "#f59e0b"];
-  const color = colors[(name.charCodeAt(0) || 0) % colors.length];
-  const sizes = {
-    sm: "2.3rem",
-    md: "3rem",
-    lg: "3.5rem",
-  };
+  const color = AVATAR_COLORS[(name.charCodeAt(0) || 0) % AVATAR_COLORS.length];
+  const cls = `avatar avatar-${size}`;
   return (
-    <div
-      className="avatar"
-      style={{
-        backgroundColor: color,
-        width: sizes[size],
-        height: sizes[size],
-        fontSize: size === "sm" ? "0.9rem" : "1rem",
-      }}
-    >
+    <div className={cls} style={{ background: `linear-gradient(135deg, ${color}, ${color}dd)` }}>
       {name.charAt(0).toUpperCase()}
     </div>
   );
+}
+
+function formatTime(dateStr) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  return d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
 }
 
 export default function AgentDashboard() {
@@ -45,6 +28,8 @@ export default function AgentDashboard() {
   const [messages, setMessages] = useState([]);
   const [contenu, setContenu] = useState("");
   const [activeTab, setActiveTab] = useState("conversations");
+  const [mobilePanel, setMobilePanel] = useState("list"); // "list" | "chat"
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const bottomRef = useRef(null);
@@ -71,14 +56,13 @@ export default function AgentDashboard() {
       if (selected && data.conversationId === selected._id) {
         setMessages((prev) => [...prev, data.message]);
       }
-      setConversations((prev) => {
-        const updated = prev.map((conv) =>
+      setConversations((prev) =>
+        prev.map((conv) =>
           conv._id === data.conversationId
             ? { ...conv, lastMessage: data.message.contenu, updatedAt: new Date().toISOString() }
-            : conv,
-        );
-        return updated;
-      });
+            : conv
+        )
+      );
     });
 
     return () => {
@@ -93,6 +77,7 @@ export default function AgentDashboard() {
 
   const openConversation = async (conv) => {
     setSelected(conv);
+    setMobilePanel("chat");
     try {
       const res = await axios.get(`/messages/conversations/${conv._id}`);
       setMessages(res.data.messages || []);
@@ -105,10 +90,7 @@ export default function AgentDashboard() {
   const replyMessage = async () => {
     if (!contenu.trim() || !selected) return;
     try {
-      const res = await axios.post(
-        `/messages/conversations/${selected._id}/reply`,
-        { contenu },
-      );
+      const res = await axios.post(`/messages/conversations/${selected._id}/reply`, { contenu });
       setMessages((prev) => [...prev, res.data]);
       setContenu("");
     } catch (err) {
@@ -121,6 +103,7 @@ export default function AgentDashboard() {
     try {
       await axios.put(`/messages/conversations/${selected._id}/close`);
       setSelected(null);
+      setMobilePanel("list");
       fetchConversations();
     } catch (err) {
       console.error(err);
@@ -138,85 +121,144 @@ export default function AgentDashboard() {
 
   return (
     <div className="dashboard">
-      <section className="sidebar fade-in-up">
+      {/* Mobile overlay */}
+      <div
+        className={`sidebar-overlay ${sidebarOpen ? "show" : ""}`}
+        onClick={() => setSidebarOpen(false)}
+      />
+
+      {/* Sidebar */}
+      <aside className={`sidebar ${sidebarOpen ? "mobile-open" : ""}`}>
         <div className="sidebar-logo">
-          <div className="avatar" style={{ backgroundColor: "#2563eb" }}>
-            C
+          <div className="sidebar-logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
           </div>
-          <div>
-            <p className="font-bold" style={{ color: "#0f172a" }}>
-              ChatSupport
-            </p>
-            <p className="panel-subtitle">Tableau agent</p>
+          <div className="sidebar-logo-text">
+            <h2>ChatSupport</h2>
+            <p>Tableau agent</p>
           </div>
         </div>
 
-        <div className="sidebar-nav">
+        <nav className="sidebar-nav">
           <button
             className={`nav-item ${activeTab === "conversations" ? "active" : ""}`}
-            onClick={() => setActiveTab("conversations")}
+            onClick={() => { setActiveTab("conversations"); setSidebarOpen(false); }}
           >
-            Conversations actives
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+            Conversations
+            {activeConvs.length > 0 && <span className="nav-badge">{activeConvs.length}</span>}
           </button>
           <button
             className={`nav-item ${activeTab === "history" ? "active" : ""}`}
-            onClick={() => setActiveTab("history")}
+            onClick={() => { setActiveTab("history"); setSidebarOpen(false); }}
           >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
             Historique
           </button>
-        </div>
+        </nav>
 
         <div className="sidebar-user">
           <Avatar name={user.nom} size="sm" />
-          <div style={{ minWidth: 0 }}>
-            <p className="font-bold" style={{ color: "#0f172a", marginBottom: "0.15rem" }}>
-              {user.nom}
-            </p>
-            <p className="panel-subtitle">Agent connecté</p>
+          <div className="sidebar-user-info">
+            <p>{user.nom}</p>
+            <span>
+              <span className="status-dot status-online" style={{ width: 6, height: 6 }} />
+              En ligne
+            </span>
           </div>
-          <button className="logout-btn" onClick={handleLogout}>Déconnexion</button>
+          <button className="logout-btn" onClick={handleLogout} title="Déconnexion">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+          </button>
         </div>
-      </section>
+      </aside>
 
-      <section className="sidebar-panel fade-in-up">
-        <div className="panel-header" style={{ padding: "1.5rem 1.5rem 0.8rem" }}>
-          <div>
-            <h2 className="panel-title">{activeTab === "conversations" ? "Conversations" : "Historique"}</h2>
-            <p className="panel-subtitle">{displayedConvs.length} discussion(s) trouvée(s)</p>
+      {/* Conversation List */}
+      <section className="conv-panel">
+        <div className="conv-panel-header">
+          <div className="flex items-center gap-2">
+            {/* Mobile menu button */}
+            <button
+              className="mobile-menu-btn btn-ghost"
+              onClick={() => setSidebarOpen(true)}
+              style={{ marginRight: "0.25rem" }}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+            </button>
+            <div>
+              <h2>
+                {activeTab === "conversations" ? "Conversations" : "Historique"}
+                <span className="conv-count">{displayedConvs.length}</span>
+              </h2>
+              <p>{activeTab === "conversations" ? "Discussions actives" : "Discussions terminées"}</p>
+            </div>
           </div>
         </div>
 
-        <div style={{ overflowY: "auto", flex: 1, padding: "0 1rem 1rem" }}>
+        <div className="conv-items">
           {displayedConvs.length === 0 ? (
-            <div className="glass-card" style={{ padding: "1.5rem", textAlign: "center" }}>
-              <p className="font-bold" style={{ marginBottom: "0.5rem" }}>Aucune discussion</p>
-              <p className="panel-subtitle">Attendez qu'un client démarre une conversation.</p>
+            <div className="conv-empty">
+              <div className="conv-empty-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+              </div>
+              <p style={{ fontWeight: 600 }}>Aucune discussion</p>
+              <p style={{ fontSize: "0.8rem" }}>Attendez qu'un client démarre une conversation.</p>
             </div>
           ) : (
-            displayedConvs.map((conv) => (
+            displayedConvs.map((conv, idx) => (
               <div
                 key={conv._id}
-                className={`conversation-card ${selected?._id === conv._id ? "selected" : ""}`}
+                className={`conv-item ${selected?._id === conv._id ? "selected" : ""}`}
                 onClick={() => openConversation(conv)}
+                style={{ animationDelay: `${idx * 0.05}s` }}
               >
-                <div className="flex items-center justify-between gap-2">
-                  <div>
-                    <p className="font-semibold" style={{ marginBottom: "0.35rem" }}>
-                      {conv.clientId?.nom || "Client"}
-                    </p>
-                    <p className="panel-subtitle" style={{ fontSize: "0.85rem" }}>
-                      {conv.clientId?.email}
-                    </p>
+                <Avatar name={conv.clientId?.nom || "C"} size="md" />
+                <div className="conv-item-info">
+                  <div className="conv-item-top">
+                    <p>{conv.clientId?.nom || "Client"}</p>
+                    <span>{formatTime(conv.updatedAt)}</span>
                   </div>
-                  <span className={`priority-pill ${priorityStyles[conv.priority || "normal"]}`}>
-                    {conv.priority || "normal"}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-2" style={{ marginTop: "0.75rem" }}>
-                  <p className="panel-subtitle" style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {conv.lastMessage || "Message initial..."}
-                  </p>
-                  <span className={`status-dot ${statusStyles[conv.status]}`} />
+                  <div className="conv-item-bottom">
+                    <p>{conv.lastMessage || "Message initial..."}</p>
+                    <div className="flex items-center gap-2">
+                      <span className={`priority-pill priority-${conv.priority || "normal"}`}>
+                        {conv.priority || "normal"}
+                      </span>
+                      <span
+                        className="status-dot"
+                        style={{
+                          background:
+                            conv.status === "active"
+                              ? "var(--success)"
+                              : conv.status === "pending"
+                              ? "var(--warning)"
+                              : "var(--text-dim)",
+                          boxShadow:
+                            conv.status === "active"
+                              ? "0 0 6px var(--success-glow)"
+                              : conv.status === "pending"
+                              ? "0 0 6px var(--warning-glow)"
+                              : "none",
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             ))
@@ -224,43 +266,65 @@ export default function AgentDashboard() {
         </div>
       </section>
 
-      <section className="chat-panel fade-in-up">
+      {/* Chat Area */}
+      <section className="chat-area">
         {selected ? (
           <>
             <div className="chat-header">
-              <div className="flex items-center gap-3">
-                <Avatar name={selected.clientId?.nom || "C"} size="md" />
+              <div className="chat-header-info">
+                <button
+                  className="btn-ghost mobile-menu-btn"
+                  onClick={() => { setSelected(null); setMobilePanel("list"); }}
+                  style={{ marginRight: "0.25rem" }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="15 18 9 12 15 6" />
+                  </svg>
+                </button>
+                <Avatar name={selected.clientId?.nom || "C"} size="lg" />
                 <div>
-                  <p className="font-bold" style={{ fontSize: "1.1rem" }}>
-                    {selected.clientId?.nom || "Client"}
+                  <h3>{selected.clientId?.nom || "Client"}</h3>
+                  <p>
+                    <span className="status-dot status-online" style={{ width: 6, height: 6 }} />
+                    {selected.subject || "Support client"}
                   </p>
-                  <p className="panel-subtitle">{selected.subject || "Support client"}</p>
                 </div>
               </div>
-              <button className="button-secondary" onClick={closeConversation}>
-                Fermer la conversation
+              <button className="btn btn-danger" onClick={closeConversation}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+                Fermer
               </button>
             </div>
 
-            <div className="chat-body">
+            <div className="chat-messages">
               {messages.length === 0 ? (
-                <div className="glass-card" style={{ padding: "1.75rem", textAlign: "center" }}>
-                  <p className="font-bold" style={{ marginBottom: "0.35rem" }}>
-                    Conversation ouverte
-                  </p>
-                  <p className="panel-subtitle">Rédigez une réponse pour démarrer la discussion.</p>
+                <div className="chat-placeholder" style={{ paddingTop: "3rem" }}>
+                  <div className="chat-placeholder-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>
+                  </div>
+                  <h3>Conversation ouverte</h3>
+                  <p>Rédigez une réponse pour démarrer la discussion.</p>
                 </div>
               ) : (
-                messages.map((msg) => {
+                messages.map((msg, idx) => {
                   const isAgent = msg.senderId?._id === user.id || msg.senderId === user.id;
                   return (
                     <div
-                      key={msg._id}
-                      className={`flex items-end gap-3 ${isAgent ? "justify-end" : "justify-start"}`}
+                      key={msg._id || idx}
+                      className={`message-row ${isAgent ? "sent" : "received"}`}
+                      style={{ animationDelay: `${idx * 0.04}s` }}
                     >
                       {!isAgent && <Avatar name={selected.clientId?.nom || "C"} size="sm" />}
-                      <div className={`chat-bubble ${isAgent ? "sent" : "received"}`}>
-                        {msg.contenu}
+                      <div className={`message-bubble ${isAgent ? "sent" : "received"}`}>
+                        <div className={`bubble-text ${isAgent ? "sent" : "received"}`}>
+                          {msg.contenu}
+                        </div>
+                        <span className="bubble-time">{formatTime(msg.createdAt)}</span>
                       </div>
                       {isAgent && <Avatar name={user.nom} size="sm" />}
                     </div>
@@ -270,8 +334,8 @@ export default function AgentDashboard() {
               <div ref={bottomRef} />
             </div>
 
-            <div className="chat-footer">
-              <div className="input-group">
+            <div className="chat-input-area">
+              <div className="chat-input-box">
                 <input
                   type="text"
                   placeholder="Répondre au client..."
@@ -279,22 +343,24 @@ export default function AgentDashboard() {
                   onChange={(e) => setContenu(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && replyMessage()}
                 />
-                <button className="button-primary" onClick={replyMessage} disabled={!contenu.trim()}>
+                <button className="send-btn" onClick={replyMessage} disabled={!contenu.trim()}>
+                  <svg viewBox="0 0 24 24">
+                    <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+                  </svg>
                   Envoyer
                 </button>
               </div>
             </div>
           </>
         ) : (
-          <div className="panel-content" style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-            <div className="glass-card" style={{ padding: "2rem", textAlign: "center" }}>
-              <p className="font-bold" style={{ marginBottom: "0.5rem" }}>
-                Sélectionnez une conversation
-              </p>
-              <p className="panel-subtitle">
-                Les messages du client apparaîtront ici une fois la session ouverte.
-              </p>
+          <div className="chat-placeholder">
+            <div className="chat-placeholder-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
             </div>
+            <h3>Sélectionnez une conversation</h3>
+            <p>Les messages du client apparaîtront ici une fois la session ouverte.</p>
           </div>
         )}
       </section>

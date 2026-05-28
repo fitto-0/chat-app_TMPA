@@ -7,10 +7,10 @@ import { useNavigate } from "react-router-dom";
 export default function ClientChat() {
   const [messages, setMessages] = useState([]);
   const [contenu, setContenu] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
   const [conversationId, setConversationId] = useState(null);
   const [isClosed, setIsClosed] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const bottomRef = useRef(null);
@@ -52,7 +52,6 @@ export default function ClientChat() {
       socket.emit("joinConversation", res.data.conversation._id);
       setIsClosed(false);
       setContenu("");
-      setIsOpen(true);
     } catch (err) {
       console.error(err);
     } finally {
@@ -66,52 +65,93 @@ export default function ClientChat() {
   };
 
   return (
-    <div className="screen-center">
-      <div className="chat-widget card fade-in-up" style={{ overflow: "hidden", maxWidth: "420px", width: "100%" }}>
-        <div className="chat-header" style={{ padding: "1.4rem 1.5rem" }}>
-          <div>
-            <p className="panel-title" style={{ marginBottom: "0.35rem" }}>
-              Support en direct
-            </p>
-            <p className="panel-subtitle">
-              Utilisez ce chat pour obtenir une aide immédiate, sans quitter le portail.
-            </p>
-          </div>
-          <button className="button-secondary" onClick={handleLogout}>
-            Déconnexion
-          </button>
-        </div>
-
-        <div className="chat-body">
-          <div className="panel-content" style={{ paddingTop: 0, gap: "1.3rem" }}>
-            <div className="glass-card" style={{ padding: "1.25rem", borderRadius: "1.5rem" }}>
-              <p className="font-bold" style={{ marginBottom: "0.65rem" }}>
-                Bienvenue, {user.nom}
-              </p>
-              <p className="panel-subtitle">
-                Vous êtes connecté en tant que <strong>{user.role}</strong>. Envoyez un message pour démarrer la conversation.
-              </p>
+    <div className="widget-page">
+      {!isOpen ? (
+        <button 
+          className="widget-toggle hover:scale-105 active:scale-95 animate-scale-in" 
+          onClick={() => setIsOpen(true)}
+          title="Ouvrir le support"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="35px">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+        </button>
+      ) : (
+        <div className="widget-container animate-scale-in">
+          <div className="widget-box">
+            {/* Header */}
+            <div className="widget-header">
+              <div className="widget-header-info">
+                <div className="widget-header-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
+                </div>
+                <div className="widget-header-text">
+                  <h3>Support en direct</h3>
+                  <span>
+                    <span className="online-dot" />
+                    En ligne — réponse rapide
+                  </span>
+                </div>
+              </div>
+              <div className="widget-actions">
+                <button onClick={() => setIsOpen(false)} title="Réduire" style={{ marginRight: '0.2rem' }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+                <button onClick={handleLogout} title="Déconnexion">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
-            <div className="flex flex-col gap-4">
+            {/* Welcome */}
+            <div className="widget-welcome">
+              <div className="widget-welcome-card">
+                <h4>Bienvenue, {user.nom} 👋</h4>
+                <p>
+                  Vous êtes connecté en tant que <strong style={{ color: "var(--accent-light)" }}>{user.role}</strong>.
+                  Envoyez un message pour démarrer la conversation.
+                </p>
+              </div>
+            </div>
+
+            {/* Messages */}
+            <div className="widget-messages">
               {messages.length === 0 ? (
-                <div className="glass-card" style={{ padding: "1.5rem", textAlign: "center" }}>
-                  <p className="font-bold" style={{ marginBottom: "0.5rem" }}>
-                    Prêt à vous aider
-                  </p>
-                  <p className="panel-subtitle">
-                    Tapez votre question dans la zone de saisie ci-dessous pour contacter un agent.
-                  </p>
+                <div className="widget-empty">
+                  <div className="widget-empty-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>
+                  </div>
+                  <h4>Prêt à vous aider</h4>
+                  <p>Tapez votre question ci-dessous pour contacter un agent de support.</p>
                 </div>
               ) : (
-                messages.map((msg) => {
+                messages.map((msg, idx) => {
                   const isMe = msg.senderId === user.id || msg.senderId?._id === user.id;
                   return (
                     <div
-                      key={msg._id}
-                      className={`flex items-end gap-3 ${isMe ? "justify-end" : "justify-start"}`}
+                      key={msg._id || idx}
+                      className={`flex items-end gap-2 ${isMe ? "justify-end" : "justify-start"}`}
+                      style={{ animationDelay: `${idx * 0.05}s` }}
                     >
-                      <div className={isMe ? "chat-bubble sent" : "chat-bubble received"}>
+                      {!isMe && (
+                        <div
+                          className="avatar avatar-sm"
+                          style={{ background: "linear-gradient(135deg, #14b8a6, #0d9488)", fontSize: "0.7rem" }}
+                        >
+                          A
+                        </div>
+                      )}
+                      <div className={`chat-bubble ${isMe ? "sent" : "received"}`}>
                         {msg.contenu}
                       </div>
                     </div>
@@ -120,39 +160,44 @@ export default function ClientChat() {
               )}
               <div ref={bottomRef} />
             </div>
-          </div>
-        </div>
 
-        <div className="chat-footer">
-          {isClosed && (
-            <div className="glass-card" style={{ padding: "1rem", textAlign: "center" }}>
-              <p className="font-semibold" style={{ marginBottom: "0.35rem" }}>
-                Conversation fermée
-              </p>
-              <p className="panel-subtitle">Un agent a clôturé cette discussion.</p>
+            {/* Closed banner */}
+            {isClosed && (
+              <div className="widget-closed-banner">
+                <p>Conversation fermée</p>
+                <p>Un agent a clôturé cette discussion.</p>
+              </div>
+            )}
+
+            {/* Input */}
+            <div className="widget-input-area">
+              <div className="widget-input-box">
+                <input
+                  type="text"
+                  value={contenu}
+                  onChange={(e) => setContenu(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                  placeholder="Écrire un message..."
+                  disabled={isClosed}
+                />
+                <button
+                  className="widget-send"
+                  onClick={sendMessage}
+                  disabled={!contenu.trim() || isClosed || loading}
+                >
+                  {loading ? (
+                    <span className="spinner" style={{ width: 14, height: 14, borderWidth: "1.5px" }} />
+                  ) : (
+                    <svg viewBox="0 0 24 24">
+                      <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
-          )}
-
-          <div className="input-group">
-            <input
-              type="text"
-              value={contenu}
-              onChange={(e) => setContenu(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-              placeholder="Écrire un message..."
-              disabled={isClosed}
-            />
-            <button
-              className="button-primary"
-              onClick={sendMessage}
-              disabled={!contenu.trim() || isClosed || loading}
-              style={{ minWidth: "4rem" }}
-            >
-              Envoyer
-            </button>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
