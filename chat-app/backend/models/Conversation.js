@@ -17,6 +17,19 @@ const conversationSchema = new mongoose.Schema(
       enum: ["pending", "active", "closed"],
       default: "pending",
     },
+    subject: {
+      type: String,
+      default: "Support request",
+    },
+    priority: {
+      type: String,
+      enum: ["low", "normal", "high"],
+      default: "normal",
+    },
+    lastMessage: {
+      type: String,
+      default: "",
+    },
     closedAt: {
       type: Date,
       default: null,

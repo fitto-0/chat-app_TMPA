@@ -4,39 +4,35 @@ import socket from "../socket/socket";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
-const statusColors = {
-  pending: {
-    bg: "bg-yellow-100",
-    text: "text-yellow-700",
-    dot: "status-dot status-away",
-    label: "En attente",
-  },
-  active: {
-    bg: "bg-green-100",
-    text: "text-green-700",
-    dot: "status-dot status-online",
-    label: "En Ligne",
-  },
-  closed: {
-    bg: "bg-gray-100",
-    text: "text-gray-500",
-    dot: "status-dot status-offline",
-    label: "Fermé",
-  },
+const statusStyles = {
+  pending: "status-away text-yellow-700 bg-yellow-50",
+  active: "status-online text-green-700 bg-green-50",
+  closed: "status-offline text-slate-500 bg-slate-100",
+};
+
+const priorityStyles = {
+  low: "priority-low",
+  normal: "priority-normal",
+  high: "priority-high",
 };
 
 function Avatar({ name = "?", size = "md" }) {
-  const colors = ["#3B82F6", "#8B5CF6", "#EC4899", "#10B981", "#F59E0B"];
+  const colors = ["#2563eb", "#8b5cf6", "#ec4899", "#14b8a6", "#f59e0b"];
   const color = colors[(name.charCodeAt(0) || 0) % colors.length];
   const sizes = {
-    sm: "w-8 h-8 text-xs",
-    md: "w-10 h-10 text-sm",
-    lg: "w-12 h-12 text-base",
+    sm: "2.3rem",
+    md: "3rem",
+    lg: "3.5rem",
   };
   return (
     <div
-      className={`${sizes[size]} rounded-full flex items-center justify-center font-bold text-white flex-shrink-0`}
-      style={{ backgroundColor: color }}
+      className="avatar"
+      style={{
+        backgroundColor: color,
+        width: sizes[size],
+        height: sizes[size],
+        fontSize: size === "sm" ? "0.9rem" : "1rem",
+      }}
     >
       {name.charAt(0).toUpperCase()}
     </div>
@@ -53,33 +49,6 @@ export default function AgentDashboard() {
   const navigate = useNavigate();
   const bottomRef = useRef(null);
 
-  useEffect(() => {
-    socket.emit("join", user.id);
-    fetchConversations();
-
-    socket.on("newConversation", (data) => {
-      setConversations((prev) => [data.conversation, ...prev]);
-    });
-
-    socket.on("newMessage", (data) => {
-      setMessages((prev) => {
-        if (selected && data.conversationId === selected._id) {
-          return [...prev, data.message];
-        }
-        return prev;
-      });
-    });
-
-    return () => {
-      socket.off("newConversation");
-      socket.off("newMessage");
-    };
-  }, [selected]);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
   const fetchConversations = async () => {
     try {
       const res = await axios.get("/messages/conversations");
@@ -89,18 +58,52 @@ export default function AgentDashboard() {
     }
   };
 
+  useEffect(() => {
+    if (!user) return;
+    socket.emit("join", user.id);
+    fetchConversations();
+
+    socket.on("newConversation", (data) => {
+      setConversations((prev) => [data.conversation, ...prev]);
+    });
+
+    socket.on("newMessage", (data) => {
+      if (selected && data.conversationId === selected._id) {
+        setMessages((prev) => [...prev, data.message]);
+      }
+      setConversations((prev) => {
+        const updated = prev.map((conv) =>
+          conv._id === data.conversationId
+            ? { ...conv, lastMessage: data.message.contenu, updatedAt: new Date().toISOString() }
+            : conv,
+        );
+        return updated;
+      });
+    });
+
+    return () => {
+      socket.off("newConversation");
+      socket.off("newMessage");
+    };
+  }, [selected, user]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
   const openConversation = async (conv) => {
     setSelected(conv);
     try {
       const res = await axios.get(`/messages/conversations/${conv._id}`);
-      setMessages(res.data);
+      setMessages(res.data.messages || []);
+      socket.emit("joinConversation", conv._id);
     } catch (err) {
       console.error(err);
     }
   };
 
   const replyMessage = async () => {
-    if (!contenu.trim()) return;
+    if (!contenu.trim() || !selected) return;
     try {
       const res = await axios.post(
         `/messages/conversations/${selected._id}/reply`,
@@ -114,6 +117,7 @@ export default function AgentDashboard() {
   };
 
   const closeConversation = async () => {
+    if (!selected) return;
     try {
       await axios.put(`/messages/conversations/${selected._id}/close`);
       setSelected(null);
@@ -130,371 +134,170 @@ export default function AgentDashboard() {
 
   const activeConvs = conversations.filter((c) => c.status !== "closed");
   const closedConvs = conversations.filter((c) => c.status === "closed");
-  const displayedConvs =
-    activeTab === "conversations" ? activeConvs : closedConvs;
+  const displayedConvs = activeTab === "conversations" ? activeConvs : closedConvs;
 
   return (
-    <div className="flex h-screen bg-slate-50 font-sans overflow-hidden">
-      {/* Sidebar */}
-      <div className="w-64 bg-white border-r border-slate-100 flex flex-col shadow-sm flex-shrink-0">
-        {/* Logo */}
-        <div className="p-5 border-b border-slate-100">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-              <svg
-                className="w-4 h-4 text-white"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
-                <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
-              </svg>
-            </div>
-            <span className="font-bold text-slate-800 text-lg">
+    <div className="dashboard">
+      <section className="sidebar fade-in-up">
+        <div className="sidebar-logo">
+          <div className="avatar" style={{ backgroundColor: "#2563eb" }}>
+            C
+          </div>
+          <div>
+            <p className="font-bold" style={{ color: "#0f172a" }}>
               ChatSupport
-            </span>
+            </p>
+            <p className="panel-subtitle">Tableau agent</p>
           </div>
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 p-4 space-y-1">
-          {[
-            {
-              id: "conversations",
-              label: "Conversations Active",
-              icon: (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                />
-              ),
-            },
-            {
-              id: "history",
-              label: "Historique",
-              icon: (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              ),
-            },
-            {
-              id: "settings",
-              label: "Paramètres",
-              icon: (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                />
-              ),
-            },
-          ].map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                activeTab === item.id
-                  ? "bg-blue-50 text-blue-600"
-                  : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
-              }`}
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                {item.icon}
-              </svg>
-              {item.label}
-              {item.id === "conversations" && activeConvs.length > 0 && (
-                <span className="ml-auto bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {activeConvs.length}
-                </span>
-              )}
-            </button>
-          ))}
-        </nav>
-
-        {/* User */}
-        <div className="p-4 border-t border-slate-100">
-          <div className="flex items-center gap-3">
-            <Avatar name={user.nom} size="sm" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-slate-700 truncate">
-                {user.nom}
-              </p>
-              <p className="text-xs text-green-500 font-medium">● En ligne</p>
-            </div>
-            <button
-              onClick={handleLogout}
-              title="Déconnexion"
-              className="text-slate-400 hover:text-red-500 transition-colors"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                />
-              </svg>
-            </button>
-          </div>
+        <div className="sidebar-nav">
+          <button
+            className={`nav-item ${activeTab === "conversations" ? "active" : ""}`}
+            onClick={() => setActiveTab("conversations")}
+          >
+            Conversations actives
+          </button>
+          <button
+            className={`nav-item ${activeTab === "history" ? "active" : ""}`}
+            onClick={() => setActiveTab("history")}
+          >
+            Historique
+          </button>
         </div>
-      </div>
 
-      {/* Conversations List */}
-      <div className="w-80 bg-white border-r border-slate-100 flex flex-col flex-shrink-0">
-        <div className="p-5 border-b border-slate-100">
-          <div className="flex items-center justify-between">
-            <h2 className="font-bold text-slate-800 text-lg">
-              {activeTab === "conversations"
-                ? "Conversations Active"
-                : "Historique"}
-            </h2>
-            <span className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-full">
-              {displayedConvs.length}
-            </span>
+        <div className="sidebar-user">
+          <Avatar name={user.nom} size="sm" />
+          <div style={{ minWidth: 0 }}>
+            <p className="font-bold" style={{ color: "#0f172a", marginBottom: "0.15rem" }}>
+              {user.nom}
+            </p>
+            <p className="panel-subtitle">Agent connecté</p>
+          </div>
+          <button className="logout-btn" onClick={handleLogout}>Déconnexion</button>
+        </div>
+      </section>
+
+      <section className="sidebar-panel fade-in-up">
+        <div className="panel-header" style={{ padding: "1.5rem 1.5rem 0.8rem" }}>
+          <div>
+            <h2 className="panel-title">{activeTab === "conversations" ? "Conversations" : "Historique"}</h2>
+            <p className="panel-subtitle">{displayedConvs.length} discussion(s) trouvée(s)</p>
           </div>
         </div>
 
-        <div className="overflow-y-auto flex-1">
+        <div style={{ overflowY: "auto", flex: 1, padding: "0 1rem 1rem" }}>
           {displayedConvs.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-2">
-              <svg
-                className="w-12 h-12 opacity-30"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                />
-              </svg>
-              <p className="text-sm">Aucune conversation</p>
+            <div className="glass-card" style={{ padding: "1.5rem", textAlign: "center" }}>
+              <p className="font-bold" style={{ marginBottom: "0.5rem" }}>Aucune discussion</p>
+              <p className="panel-subtitle">Attendez qu'un client démarre une conversation.</p>
             </div>
           ) : (
-            displayedConvs.map((conv) => {
-              const s = statusColors[conv.status] || statusColors.pending;
-              return (
-                <div
-                  key={conv._id}
-                  onClick={() => openConversation(conv)}
-                  className={`p-4 border-b border-slate-50 cursor-pointer hover:bg-slate-50 transition-all ${
-                    selected?._id === conv._id
-                      ? "bg-blue-50 border-l-4 border-l-blue-500"
-                      : ""
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Avatar name={conv.clientId?.nom || "?"} size="md" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="font-semibold text-slate-800 text-sm truncate">
-                          {conv.clientId?.nom || "Client"}
-                        </p>
-                        <span className="text-xs text-slate-400 flex-shrink-0 ml-2">
-                          {new Date(conv.updatedAt).toLocaleTimeString(
-                            "fr-FR",
-                            { hour: "2-digit", minute: "2-digit" },
-                          )}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs text-slate-400 truncate">
-                          {conv.clientId?.email}
-                        </p>
-                        <span
-                          className={`flex items-center gap-1 text-xs font-medium ${s.text} flex-shrink-0 ml-2`}
-                        >
-                          <span
-                            className={`w-1.5 h-1.5 rounded-full ${s.dot}`}
-                          ></span>
-                          {s.label}
-                        </span>
-                      </div>
-                    </div>
+            displayedConvs.map((conv) => (
+              <div
+                key={conv._id}
+                className={`conversation-card ${selected?._id === conv._id ? "selected" : ""}`}
+                onClick={() => openConversation(conv)}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <p className="font-semibold" style={{ marginBottom: "0.35rem" }}>
+                      {conv.clientId?.nom || "Client"}
+                    </p>
+                    <p className="panel-subtitle" style={{ fontSize: "0.85rem" }}>
+                      {conv.clientId?.email}
+                    </p>
                   </div>
+                  <span className={`priority-pill ${priorityStyles[conv.priority || "normal"]}`}>
+                    {conv.priority || "normal"}
+                  </span>
                 </div>
-              );
-            })
-          )}
-        </div>
-      </div>
-
-      {/* Chat Area */}
-      <div className="flex-1 flex flex-col bg-slate-50 min-w-0">
-        {selected ? (
-          <>
-            {/* Chat Header */}
-            <div className="bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between shadow-sm">
-              <div className="flex items-center gap-3">
-                <Avatar name={selected.clientId?.nom || "?"} size="md" />
-                <div>
-                  <h3 className="font-bold text-slate-800">
-                    {selected.clientId?.nom}
-                  </h3>
-                  <p className="text-xs text-green-500 font-medium flex items-center gap-1">
-                    <span className="status-dot status-online"></span>
-                    Connecté
+                <div className="flex items-center justify-between gap-2" style={{ marginTop: "0.75rem" }}>
+                  <p className="panel-subtitle" style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {conv.lastMessage || "Message initial..."}
                   </p>
+                  <span className={`status-dot ${statusStyles[conv.status]}`} />
                 </div>
               </div>
-              {selected.status !== "closed" && (
-                <button
-                  onClick={closeConversation}
-                  className="flex items-center gap-2 bg-red-50 text-red-500 hover:bg-red-100 px-4 py-2 rounded-xl text-sm font-medium transition-all"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                  Fermer
-                </button>
-              )}
+            ))
+          )}
+        </div>
+      </section>
+
+      <section className="chat-panel fade-in-up">
+        {selected ? (
+          <>
+            <div className="chat-header">
+              <div className="flex items-center gap-3">
+                <Avatar name={selected.clientId?.nom || "C"} size="md" />
+                <div>
+                  <p className="font-bold" style={{ fontSize: "1.1rem" }}>
+                    {selected.clientId?.nom || "Client"}
+                  </p>
+                  <p className="panel-subtitle">{selected.subject || "Support client"}</p>
+                </div>
+              </div>
+              <button className="button-secondary" onClick={closeConversation}>
+                Fermer la conversation
+              </button>
             </div>
 
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              {messages.map((msg) => {
-                const isAgent =
-                  msg.senderId?._id === user.id || msg.senderId === user.id;
-                return (
-                  <div
-                    key={msg._id}
-                    className={`flex items-end gap-2 ${isAgent ? "justify-end" : "justify-start"}`}
-                  >
-                    {!isAgent && (
-                      <Avatar name={selected.clientId?.nom || "?"} size="sm" />
-                    )}
+            <div className="chat-body">
+              {messages.length === 0 ? (
+                <div className="glass-card" style={{ padding: "1.75rem", textAlign: "center" }}>
+                  <p className="font-bold" style={{ marginBottom: "0.35rem" }}>
+                    Conversation ouverte
+                  </p>
+                  <p className="panel-subtitle">Rédigez une réponse pour démarrer la discussion.</p>
+                </div>
+              ) : (
+                messages.map((msg) => {
+                  const isAgent = msg.senderId?._id === user.id || msg.senderId === user.id;
+                  return (
                     <div
-                      className={`max-w-sm ${isAgent ? "items-end" : "items-start"} flex flex-col gap-1`}
+                      key={msg._id}
+                      className={`flex items-end gap-3 ${isAgent ? "justify-end" : "justify-start"}`}
                     >
-                      <div
-                        className={`px-4 py-2.5 rounded-2xl text-sm shadow-sm ${
-                          isAgent
-                            ? "bg-blue-500 text-white rounded-br-sm"
-                            : "bg-white text-slate-800 rounded-bl-sm"
-                        }`}
-                      >
+                      {!isAgent && <Avatar name={selected.clientId?.nom || "C"} size="sm" />}
+                      <div className={`chat-bubble ${isAgent ? "sent" : "received"}`}>
                         {msg.contenu}
                       </div>
-                      <span className="text-xs text-slate-400">
-                        {new Date(msg.createdAt).toLocaleTimeString("fr-FR", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
+                      {isAgent && <Avatar name={user.nom} size="sm" />}
                     </div>
-                    {isAgent && <Avatar name={user.nom} size="sm" />}
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
               <div ref={bottomRef} />
             </div>
 
-            {/* Input */}
-            {selected.status !== "closed" ? (
-              <div className="bg-white border-t border-slate-100 p-4">
-                <div className="flex items-center gap-3 bg-slate-50 rounded-2xl px-4 py-2 border border-slate-200 focus-within:border-blue-300 focus-within:bg-white transition-all">
-                  <button className="text-slate-400 hover:text-blue-500 transition-colors flex-shrink-0">
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-                      />
-                    </svg>
-                  </button>
-                  <input
-                    type="text"
-                    value={contenu}
-                    onChange={(e) => setContenu(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && replyMessage()}
-                    placeholder="Répondre au client..."
-                    className="flex-1 bg-transparent text-sm text-slate-700 outline-none placeholder-slate-400"
-                  />
-                  <button
-                    onClick={replyMessage}
-                    disabled={!contenu.trim()}
-                    className="bg-blue-500 hover:bg-blue-600 disabled:opacity-40 text-white rounded-xl px-4 py-1.5 text-sm font-medium flex items-center gap-2 transition-all flex-shrink-0"
-                  >
-                    Envoyer
-                    <svg
-                      className="w-4 h-4"
-                      fill="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-                    </svg>
-                  </button>
-                </div>
+            <div className="chat-footer">
+              <div className="input-group">
+                <input
+                  type="text"
+                  placeholder="Répondre au client..."
+                  value={contenu}
+                  onChange={(e) => setContenu(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && replyMessage()}
+                />
+                <button className="button-primary" onClick={replyMessage} disabled={!contenu.trim()}>
+                  Envoyer
+                </button>
               </div>
-            ) : (
-              <div className="bg-white border-t border-slate-100 p-4 text-center text-sm text-slate-400">
-                Cette conversation est fermée
-              </div>
-            )}
+            </div>
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-slate-400 gap-4">
-            <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center">
-              <svg
-                className="w-8 h-8 text-blue-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                />
-              </svg>
-            </div>
-            <div className="text-center">
-              <p className="font-semibold text-slate-600 mb-1">
-                Aucune conversation sélectionnée
+          <div className="panel-content" style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+            <div className="glass-card" style={{ padding: "2rem", textAlign: "center" }}>
+              <p className="font-bold" style={{ marginBottom: "0.5rem" }}>
+                Sélectionnez une conversation
               </p>
-              <p className="text-sm">
-                Cliquez sur une conversation pour commencer
+              <p className="panel-subtitle">
+                Les messages du client apparaîtront ici une fois la session ouverte.
               </p>
             </div>
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }

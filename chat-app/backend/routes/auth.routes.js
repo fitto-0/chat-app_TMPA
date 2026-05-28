@@ -10,6 +10,7 @@ const {
 const auth = require("../middleware/auth.middleware");
 const admin = require("../middleware/admin.middleware");
 
+router.post("/register", register);
 router.post("/login", login);
 
 // Admin routes

@@ -9,7 +9,10 @@ import AdminDashboard from "./pages/AdminDashboard";
 const ProtectedRoute = ({ children, role }) => {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" />;
-  if (role && user.role !== role) return <Navigate to="/login" />;
+  if (role) {
+    const roles = Array.isArray(role) ? role : [role];
+    if (!roles.includes(user.role)) return <Navigate to="/login" />;
+  }
   return children;
 };
 
@@ -22,7 +25,7 @@ export default function App() {
         <Route
           path="/chat"
           element={
-            <ProtectedRoute role="client">
+            <ProtectedRoute role={["client", "admin", "superAdmin"]}>
               <ClientChat />
             </ProtectedRoute>
           }
@@ -30,7 +33,7 @@ export default function App() {
         <Route
           path="/agent"
           element={
-            <ProtectedRoute role="agent">
+            <ProtectedRoute role={["agent", "admin", "superAdmin"]}>
               <AgentDashboard />
             </ProtectedRoute>
           }
@@ -38,7 +41,7 @@ export default function App() {
         <Route
           path="/admin"
           element={
-            <ProtectedRoute role="admin">
+            <ProtectedRoute role={["admin", "superAdmin"]}>
               <AdminDashboard />
             </ProtectedRoute>
           }

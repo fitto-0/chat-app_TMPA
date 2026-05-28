@@ -33,7 +33,7 @@ export default function AdminDashboard() {
     setLoading(true);
     try {
       await axios.post("/auth/agents", form);
-      setSuccess("Agent créé avec succès!");
+      setSuccess("Agent créé avec succès !");
       setForm({ nom: "", email: "", password: "" });
       fetchAgents();
     } catch (err) {
@@ -44,7 +44,7 @@ export default function AdminDashboard() {
   };
 
   const deleteAgent = async (id) => {
-    if (!window.confirm("Supprimer cet agent?")) return;
+    if (!window.confirm("Supprimer cet agent ?")) return;
     try {
       await axios.delete(`/auth/agents/${id}`);
       fetchAgents();
@@ -59,377 +59,132 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="dashboard">
-      {/* Sidebar */}
-      <div className="sidebar">
+    <div className="dashboard" style={{ padding: "1rem" }}>
+      <section className="sidebar fade-in-up" style={{ minHeight: "auto" }}>
         <div className="sidebar-logo">
-          <div className="sidebar-logo-icon">
-            <svg viewBox="0 0 20 20">
-              <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
-              <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
-            </svg>
+          <div className="avatar" style={{ backgroundColor: "#8b5cf6" }}>
+            A
           </div>
-          <span>ChatSupport</span>
+          <div>
+            <p className="font-bold">ChatSupport</p>
+            <p className="panel-subtitle">Administration</p>
+          </div>
         </div>
-
-        <nav className="sidebar-nav">
+        <div className="sidebar-nav">
           <button
             className={`nav-item ${activeTab === "create" ? "active" : ""}`}
             onClick={() => setActiveTab("create")}
           >
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
             Créer un agent
           </button>
           <button
             className={`nav-item ${activeTab === "agents" ? "active" : ""}`}
             onClick={() => setActiveTab("agents")}
           >
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-              />
-            </svg>
             Liste des agents
             <span className="nav-badge">{agents.length}</span>
           </button>
-        </nav>
+        </div>
         <div className="sidebar-user">
-          <div
-            className="avatar avatar-sm"
-            style={{ backgroundColor: "#8B5CF6" }}
-          >
+          <div className="avatar avatar-sm" style={{ backgroundColor: "#2563eb" }}>
             {user.nom.charAt(0).toUpperCase()}
           </div>
-          <div className="sidebar-user-info">
-            <p>{user.nom}</p>
-            <span>● Admin</span>
+          <div style={{ minWidth: 0 }}>
+            <p className="font-bold">{user.nom}</p>
+            <p className="panel-subtitle">Administrateur</p>
           </div>
-          <button
-            className="logout-btn"
-            onClick={handleLogout}
-            title="Déconnexion"
-          >
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-              />
-            </svg>
+          <button className="logout-btn" onClick={handleLogout}>
+            Déconnexion
           </button>
         </div>
-      </div>
+      </section>
 
-      {/* Main Content */}
-      <div className="chat-area" style={{ padding: "2rem", overflowY: "auto" }}>
-        {/* ===== TAB: CREATE ===== */}
-        {activeTab === "create" && (
-          <>
-            <h1
-              style={{
-                fontSize: "1.5rem",
-                fontWeight: "700",
-                color: "var(--color-text-primary)",
-                marginBottom: "2rem",
-              }}
-            >
-              Créer un nouvel agent
-            </h1>
-            <div
-              style={{
-                background: "white",
-                borderRadius: "1rem",
-                padding: "1.5rem",
-                border: "1px solid var(--color-border-tertiary)",
-                maxWidth: "500px",
-              }}
-            >
+      <section className="sidebar-panel fade-in-up" style={{ gridColumn: "span 2" }}>
+        <div className="panel-header" style={{ padding: "1.5rem 1.5rem 0.8rem" }}>
+          <div>
+            <h2 className="panel-title">{activeTab === "create" ? "Créer un agent" : "Liste des agents"}</h2>
+            <p className="panel-subtitle">
+              {activeTab === "create"
+                ? "Ajouter un nouvel agent pour gérer les conversations."
+                : "Gérez les agents de support existants."}
+            </p>
+          </div>
+        </div>
+
+        <div className="panel-content" style={{ paddingTop: 0 }}>
+          {activeTab === "create" ? (
+            <div className="glass-card" style={{ padding: "1.75rem" }}>
               {error && (
-                <div
-                  style={{
-                    background: "#fef2f2",
-                    color: "#ef4444",
-                    padding: "0.75rem",
-                    borderRadius: "0.5rem",
-                    marginBottom: "1rem",
-                    fontSize: "0.875rem",
-                  }}
-                >
+                <div style={{ background: "#fef2f2", color: "#b91c1c", padding: "1rem", borderRadius: "1rem" }}>
                   {error}
                 </div>
               )}
               {success && (
-                <div
-                  style={{
-                    background: "#f0fdf4",
-                    color: "#22c55e",
-                    padding: "0.75rem",
-                    borderRadius: "0.5rem",
-                    marginBottom: "1rem",
-                    fontSize: "0.875rem",
-                  }}
-                >
+                <div style={{ background: "#ecfccb", color: "#15803d", padding: "1rem", borderRadius: "1rem" }}>
                   {success}
                 </div>
               )}
-              <form
-                onSubmit={createAgent}
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "0.75rem",
-                }}
-              >
+              <form style={{ display: "grid", gap: "1rem" }} onSubmit={createAgent}>
                 <input
                   type="text"
+                  name="nom"
                   placeholder="Nom"
                   value={form.nom}
                   required
                   onChange={(e) => setForm({ ...form, nom: e.target.value })}
-                  style={{
-                    padding: "0.75rem 1rem",
-                    border: "2px solid var(--color-border-tertiary)",
-                    borderRadius: "0.75rem",
-                    fontSize: "0.9rem",
-                    outline: "none",
-                    color: "var(--color-text-primary)",
-                    background: "var(--color-background-primary)",
-                  }}
+                  className="input-field"
                 />
                 <input
                   type="email"
+                  name="email"
                   placeholder="Email"
                   value={form.email}
                   required
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  style={{
-                    padding: "0.75rem 1rem",
-                    border: "2px solid var(--color-border-tertiary)",
-                    borderRadius: "0.75rem",
-                    fontSize: "0.9rem",
-                    outline: "none",
-                    color: "var(--color-text-primary)",
-                    background: "var(--color-background-primary)",
-                  }}
+                  className="input-field"
                 />
                 <input
                   type="password"
+                  name="password"
                   placeholder="Mot de passe"
                   value={form.password}
                   required
-                  onChange={(e) =>
-                    setForm({ ...form, password: e.target.value })
-                  }
-                  style={{
-                    padding: "0.75rem 1rem",
-                    border: "2px solid var(--color-border-tertiary)",
-                    borderRadius: "0.75rem",
-                    fontSize: "0.9rem",
-                    outline: "none",
-                    color: "var(--color-text-primary)",
-                    background: "var(--color-background-primary)",
-                  }}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  className="input-field"
                 />
-                <button
-                  type="submit"
-                  disabled={loading}
-                  style={{
-                    padding: "0.75rem",
-                    background: loading ? "#93c5fd" : "#3b82f6",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "0.75rem",
-                    fontSize: "0.9rem",
-                    fontWeight: "600",
-                    cursor: loading ? "not-allowed" : "pointer",
-                  }}
-                >
-                  {loading ? "Création..." : "Créer l'agent"}
+                <button type="submit" className="button-primary" disabled={loading}>
+                  {loading ? "Création..." : "Créer un agent"}
                 </button>
               </form>
             </div>
-          </>
-        )}
-
-        {/* ===== TAB: AGENTS LIST ===== */}
-        {activeTab === "agents" && (
-          <>
-            <h1
-              style={{
-                fontSize: "1.5rem",
-                fontWeight: "700",
-                color: "var(--color-text-primary)",
-                marginBottom: "2rem",
-              }}
-            >
-              Liste des agents
-            </h1>
-            <div
-              style={{
-                background: "white",
-                borderRadius: "1rem",
-                border: "1px solid var(--color-border-tertiary)",
-                overflow: "hidden",
-              }}
-            >
-              <div
-                style={{
-                  padding: "1rem 1.5rem",
-                  borderBottom: "1px solid var(--color-border-tertiary)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
-                <h2
-                  style={{
-                    fontSize: "1rem",
-                    fontWeight: "700",
-                    color: "var(--color-text-primary)",
-                  }}
-                >
-                  Agents
-                </h2>
-                <span
-                  style={{
-                    background: "#eff6ff",
-                    color: "#3b82f6",
-                    fontSize: "0.75rem",
-                    fontWeight: "600",
-                    padding: "0.2rem 0.6rem",
-                    borderRadius: "999px",
-                  }}
-                >
-                  {agents.length} agent{agents.length !== 1 ? "s" : ""}
-                </span>
-              </div>
-
+          ) : (
+            <div className="glass-card" style={{ padding: "1.5rem" }}>
               {agents.length === 0 ? (
-                <div
-                  style={{
-                    padding: "3rem",
-                    textAlign: "center",
-                    color: "var(--color-text-secondary)",
-                  }}
-                >
-                  <p style={{ fontSize: "0.875rem" }}>Aucun agent créé</p>
-                </div>
+                <p className="panel-subtitle">Aucun agent créé pour le moment.</p>
               ) : (
-                agents.map((agent) => (
-                  <div
-                    key={agent._id}
-                    style={{
-                      padding: "1rem 1.5rem",
-                      borderBottom: "1px solid var(--color-border-tertiary)",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "1rem",
-                    }}
-                  >
-                    <div
-                      className="avatar avatar-md"
-                      style={{ backgroundColor: "#3b82f6" }}
-                    >
-                      {agent.nom.charAt(0).toUpperCase()}
+                <div className="grid" style={{ gap: "1rem" }}>
+                  {agents.map((agent) => (
+                    <div key={agent._id} className="conversation-card">
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <p className="font-semibold">{agent.nom}</p>
+                          <p className="panel-subtitle">{agent.email}</p>
+                        </div>
+                        <button
+                          className="button-secondary"
+                          onClick={() => deleteAgent(agent._id)}
+                        >
+                          Supprimer
+                        </button>
+                      </div>
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <p
-                        style={{
-                          fontWeight: "600",
-                          fontSize: "0.9rem",
-                          color: "var(--color-text-primary)",
-                        }}
-                      >
-                        {agent.nom}
-                      </p>
-                      <p
-                        style={{
-                          fontSize: "0.8rem",
-                          color: "var(--color-text-secondary)",
-                        }}
-                      >
-                        {agent.email}
-                      </p>
-                    </div>
-                    <span
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.3rem",
-                        fontSize: "0.75rem",
-                        fontWeight: "600",
-                        color: agent.isOnline ? "#22c55e" : "#94a3b8",
-                      }}
-                    >
-                      <span
-                        style={{
-                          width: "6px",
-                          height: "6px",
-                          borderRadius: "50%",
-                          background: agent.isOnline ? "#22c55e" : "#94a3b8",
-                          display: "inline-block",
-                        }}
-                      ></span>
-                      {agent.isOnline ? "En ligne" : "Hors ligne"}
-                    </span>
-                    <span
-                      style={{
-                        background: "#f0fdf4",
-                        color: "#22c55e",
-                        fontSize: "0.75rem",
-                        fontWeight: "600",
-                        padding: "0.25rem 0.75rem",
-                        borderRadius: "999px",
-                      }}
-                    >
-                      Agent
-                    </span>
-                    <button
-                      onClick={() => deleteAgent(agent._id)}
-                      style={{
-                        background: "#fef2f2",
-                        color: "#ef4444",
-                        border: "none",
-                        borderRadius: "0.5rem",
-                        padding: "0.5rem",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                      }}
-                    >
-                      <svg
-                        width="16"
-                        height="16"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                ))
+                  ))}
+                </div>
               )}
             </div>
-          </>
-        )}
-      </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
