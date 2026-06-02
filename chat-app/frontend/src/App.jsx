@@ -22,14 +22,9 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Navigate to="/login" />} />
-        <Route path="/login" element={<Login />} />        <Route
-          path="/chat"
-          element={
-            <ProtectedRoute role={["client", "admin", "superAdmin"]}>
-              <ClientChat />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/chat" element={<ClientChat />} />
         <Route
           path="/agent"
           element={

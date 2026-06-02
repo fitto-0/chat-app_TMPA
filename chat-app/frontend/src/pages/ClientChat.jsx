@@ -11,12 +11,31 @@ export default function ClientChat() {
   const [isClosed, setIsClosed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, login, logout } = useAuth();
   const navigate = useNavigate();
   const bottomRef = useRef(null);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      // Simulate inheritance from TMPA Portal (SSO)
+      const mockSSO = async () => {
+        try {
+          const res = await axios.post("/auth/login", { email: "demo@tangermed.ma", password: "tm-password" });
+          login(res.data.user, res.data.token);
+        } catch (err) {
+          try {
+            await axios.post("/auth/register", { nom: "Utilisateur TMPA", email: "demo@tangermed.ma", password: "tm-password", role: "client" });
+            const res = await axios.post("/auth/login", { email: "demo@tangermed.ma", password: "tm-password" });
+            login(res.data.user, res.data.token);
+          } catch (e) {
+            console.error("SSO Simulation failed", e);
+          }
+        }
+      };
+      mockSSO();
+      return;
+    }
+
     socket.emit("join", user.id);
 
     socket.on("newMessage", (data) => {
