@@ -1,7 +1,7 @@
-const Message = require('../models/Message');
-const Conversation = require('../models/Conversation');
-const User = require('../models/User');
-const { getIO } = require('../socket/socket');
+const Message = require("../models/Message");
+const Conversation = require("../models/Conversation");
+const User = require("../models/User");
+const { getIO } = require("../socket/socket");
 
 const emitToUser = (userId, event, payload) => {
   const io = getIO();
@@ -12,7 +12,7 @@ const emitToUser = (userId, event, payload) => {
 const emitToAgents = (event, payload) => {
   const io = getIO();
   if (!io) return;
-  io.to('agents').emit(event, payload);
+  io.to("agents").emit(event, payload);
 };
 
 const emitToConversation = (conversationId, event, payload) => {
@@ -23,7 +23,7 @@ const emitToConversation = (conversationId, event, payload) => {
 
 const updateConversationAfterMessage = async (conversation, message) => {
   conversation.lastMessage = message.contenu;
-  conversation.status = conversation.agentId ? 'active' : conversation.status;
+  conversation.status = conversation.agentId ? "active" : conversation.status;
   await conversation.save();
 };
 
@@ -34,14 +34,14 @@ exports.sendMessage = async (req, res) => {
 
     let conversation = await Conversation.findOne({
       clientId,
-      status: { $in: ['pending', 'active'] },
+      status: { $in: ["pending", "active"] },
     });
 
     if (!conversation) {
       conversation = await Conversation.create({
         clientId,
-        subject: subject || 'Support request',
-        priority: priority || 'normal',
+        subject: subject || "Support request",
+        priority: priority || "normal",
       });
     }
 
@@ -54,12 +54,12 @@ exports.sendMessage = async (req, res) => {
     await updateConversationAfterMessage(conversation, message);
 
     if (conversation.agentId) {
-      emitToUser(conversation.agentId, 'newMessage', {
+      emitToUser(conversation.agentId, "newMessage", {
         message,
         conversationId: conversation._id,
       });
     } else {
-      emitToAgents('newConversation', {
+      emitToAgents("newConversation", {
         conversation,
         message,
       });
@@ -77,15 +77,15 @@ exports.getConversations = async (req, res) => {
     const role = req.user.role;
 
     let filter = {};
-    if (role === 'client') {
+    if (role === "client") {
       filter = { clientId: userId };
-    } else if (role === 'agent') {
-      filter = { status: { $in: ['pending', 'active', 'closed'] } };
+    } else if (role === "agent") {
+      filter = { status: { $in: ["pending", "active", "closed"] } };
     }
 
     const conversations = await Conversation.find(filter)
-      .populate('clientId', 'nom email role')
-      .populate('agentId', 'nom email role')
+      .populate("clientId", "nom email role")
+      .populate("agentId", "nom email role")
       .sort({ updatedAt: -1 });
 
     res.status(200).json(conversations);
@@ -102,24 +102,24 @@ exports.getMessages = async (req, res) => {
 
     const conversation = await Conversation.findById(conversationId);
     if (!conversation) {
-      return res.status(404).json({ message: 'Conversation introuvable' });
+      return res.status(404).json({ message: "Conversation introuvable" });
     }
 
-    if (role === 'client' && conversation.clientId.toString() !== userId) {
-      return res.status(403).json({ message: 'Accès refusé' });
+    if (role === "client" && conversation.clientId.toString() !== userId) {
+      return res.status(403).json({ message: "Accès refusé" });
     }
 
     if (
-      role === 'agent' &&
+      role === "agent" &&
       conversation.agentId &&
       conversation.agentId.toString() !== userId &&
-      conversation.status === 'active'
+      conversation.status === "active"
     ) {
-      return res.status(403).json({ message: 'Accès refusé' });
+      return res.status(403).json({ message: "Accès refusé" });
     }
 
     const messages = await Message.find({ conversationId })
-      .populate('senderId', 'nom role')
+      .populate("senderId", "nom role")
       .sort({ createdAt: 1 });
 
     res.status(200).json({ conversation, messages });
@@ -135,23 +135,23 @@ exports.assignConversation = async (req, res) => {
 
     const conversation = await Conversation.findById(conversationId);
     if (!conversation) {
-      return res.status(404).json({ message: 'Conversation introuvable' });
+      return res.status(404).json({ message: "Conversation introuvable" });
     }
 
-    if (conversation.status === 'closed') {
-      return res.status(400).json({ message: 'Conversation déjà fermée' });
+    if (conversation.status === "closed") {
+      return res.status(400).json({ message: "Conversation déjà fermée" });
     }
 
     if (conversation.agentId) {
-      return res.status(400).json({ message: 'Conversation déjà assignée' });
+      return res.status(400).json({ message: "Conversation déjà assignée" });
     }
 
     conversation.agentId = agentId;
-    conversation.status = 'active';
+    conversation.status = "active";
     await conversation.save();
 
-    emitToUser(agentId, 'conversationAssigned', { conversation });
-    emitToAgents('conversationAssigned', { conversation });
+    emitToUser(agentId, "conversationAssigned", { conversation });
+    emitToAgents("conversationAssigned", { conversation });
 
     res.status(200).json(conversation);
   } catch (error) {
@@ -167,11 +167,11 @@ exports.replyMessage = async (req, res) => {
 
     const conversation = await Conversation.findById(conversationId);
     if (!conversation) {
-      return res.status(404).json({ message: 'Conversation introuvable' });
+      return res.status(404).json({ message: "Conversation introuvable" });
     }
 
-    if (conversation.status === 'closed') {
-      return res.status(400).json({ message: 'Conversation fermée' });
+    if (conversation.status === "closed") {
+      return res.status(400).json({ message: "Conversation fermée" });
     }
 
     if (!conversation.agentId) {
@@ -181,12 +181,14 @@ exports.replyMessage = async (req, res) => {
     if (
       conversation.agentId &&
       conversation.agentId.toString() !== agentId &&
-      req.user.role === 'agent'
+      req.user.role === "agent"
     ) {
-      return res.status(403).json({ message: 'Conversation assignée à un autre agent' });
+      return res
+        .status(403)
+        .json({ message: "Conversation assignée à un autre agent" });
     }
 
-    conversation.status = 'active';
+    conversation.status = "active";
     await conversation.save();
 
     const message = await Message.create({
@@ -196,11 +198,11 @@ exports.replyMessage = async (req, res) => {
     });
 
     await updateConversationAfterMessage(conversation, message);
-    emitToUser(conversation.clientId, 'newMessage', {
+    emitToUser(conversation.clientId, "newMessage", {
       message,
       conversationId,
     });
-    emitToConversation(conversationId, 'conversationUpdated', { conversation });
+    emitToConversation(conversationId, "conversationUpdated", { conversation });
 
     res.status(201).json(message);
   } catch (error) {
@@ -214,23 +216,25 @@ exports.closeConversation = async (req, res) => {
 
     const conversation = await Conversation.findById(conversationId);
     if (!conversation) {
-      return res.status(404).json({ message: 'Conversation introuvable' });
+      return res.status(404).json({ message: "Conversation introuvable" });
     }
 
-    if (conversation.status === 'closed') {
-      return res.status(400).json({ message: 'Conversation déjà fermée' });
+    if (conversation.status === "closed") {
+      return res.status(400).json({ message: "Conversation déjà fermée" });
     }
 
-    conversation.status = 'closed';
+    conversation.status = "closed";
     conversation.closedAt = new Date();
     await conversation.save();
 
-    emitToUser(conversation.clientId, 'conversationClosed', { conversationId });
+    emitToUser(conversation.clientId, "conversationClosed", { conversationId });
     if (conversation.agentId) {
-      emitToUser(conversation.agentId, 'conversationClosed', { conversationId });
+      emitToUser(conversation.agentId, "conversationClosed", {
+        conversationId,
+      });
     }
 
-    res.status(200).json({ message: 'Conversation fermée' });
+    res.status(200).json({ message: "Conversation fermée" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
