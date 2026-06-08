@@ -756,6 +756,9 @@ button {
   overflow: hidden;
   background: var(--bg-deep);
   gap: 0;
+  flex: 1;
+  overflow-y: auto; /* Forces the scrollbar to appear when content overflows */
+  min-height: 0; /* Prevents the flex child from expanding infinitely */
 }
 
 /* ---- Sidebar ---- */
@@ -984,6 +987,8 @@ button {
   flex: 1;
   overflow-y: auto;
   padding: 0.5rem;
+  overflow-y: auto; /* Forces the scrollbar to appear when content overflows */
+  min-height: 0; /* Prevents the flex child from expanding infinitely */
 }
 
 .conv-item {
@@ -1127,6 +1132,8 @@ button {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  overflow-y: auto; /* Forces the scrollbar to appear when content overflows */
+  min-height: 0; /* Prevents the flex child from expanding infinitely */
 }
 
 .message-row {
@@ -1955,4 +1962,39 @@ button {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* ================================================================
+   Custom Scrollbar Styling (Global & Component Specific)
+   ================================================================ */
+
+/* --- WebKit Browsers (Chrome, Safari, Edge, Opera) --- */
+::-webkit-scrollbar {
+  width: 6px; /* Width of vertical scrollbar */
+  height: 6px; /* Height of horizontal scrollbar */
+}
+
+/* Track (The track behind the moving thumb) */
+::-webkit-scrollbar-track {
+  background: transparent; /* Keeps layout clean and seamless */
+}
+
+/* Thumb (The draggable element) */
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1; /* Subtle slate color to match soft light theme */
+  border-radius: 9999px; /* Fully rounded elegant pill shape */
+  transition: background 0.2s ease;
+}
+
+/* Thumb Hover State */
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8; /* Darkens slightly on hover for intuitive feedback */
+}
+
+/* --- Firefox Standard Support --- */
+@supports (scrollbar-width: thin) {
+  * {
+    scrollbar-width: thin; /* Makes scrollbar slim */
+    scrollbar-color: #cbd5e1 transparent; /* Thumb color and track color */
+  }
 }

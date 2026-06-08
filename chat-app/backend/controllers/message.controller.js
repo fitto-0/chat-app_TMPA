@@ -80,7 +80,7 @@ exports.getConversations = async (req, res) => {
     if (role === 'client') {
       filter = { clientId: userId };
     } else if (role === 'agent') {
-      filter = { status: { $in: ['pending', 'active'] } };
+      filter = { status: { $in: ['pending', 'active', 'closed'] } };
     }
 
     const conversations = await Conversation.find(filter)
