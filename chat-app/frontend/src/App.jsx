@@ -28,7 +28,7 @@ export default function App() {
         <Route
           path="/agent"
           element={
-            <ProtectedRoute role={["agent", "admin", "superAdmin"]}>
+            <ProtectedRoute role={["agent", "admin"]}>
               <AgentDashboard />
             </ProtectedRoute>
           }
@@ -36,7 +36,7 @@ export default function App() {
         <Route
           path="/admin"
           element={
-            <ProtectedRoute role={["admin", "superAdmin"]}>
+            <ProtectedRoute role={["admin"]}>
               <AdminDashboard />
             </ProtectedRoute>
           }

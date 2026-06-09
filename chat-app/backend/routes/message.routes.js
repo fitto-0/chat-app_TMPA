@@ -20,19 +20,19 @@ router.get("/conversations/:conversationId", auth, getMessages);
 router.post(
   "/conversations/:conversationId/assign",
   auth,
-  permit("agent", "admin", "superAdmin"),
+  permit("agent", "admin"),
   assignConversation,
 );
 router.post(
   "/conversations/:conversationId/reply",
   auth,
-  permit("agent", "admin", "superAdmin"),
+  permit("agent", "admin"),
   replyMessage,
 );
 router.put(
   "/conversations/:conversationId/close",
   auth,
-  permit("agent", "admin", "superAdmin"),
+  permit("agent", "admin"),
   closeConversation,
 );
 

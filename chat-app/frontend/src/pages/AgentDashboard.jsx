@@ -4,13 +4,24 @@ import socket from "../socket/socket";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
-const AVATAR_COLORS = ["#6366f1", "#8b5cf6", "#ec4899", "#14b8a6", "#f59e0b", "#ef4444", "#06b6d4"];
+const AVATAR_COLORS = [
+  "#6366f1",
+  "#8b5cf6",
+  "#ec4899",
+  "#14b8a6",
+  "#f59e0b",
+  "#ef4444",
+  "#06b6d4",
+];
 
 function Avatar({ name = "?", size = "md" }) {
   const color = AVATAR_COLORS[(name.charCodeAt(0) || 0) % AVATAR_COLORS.length];
   const cls = `avatar avatar-${size}`;
   return (
-    <div className={cls} style={{ background: `linear-gradient(135deg, ${color}, ${color}dd)` }}>
+    <div
+      className={cls}
+      style={{ background: `linear-gradient(135deg, ${color}, ${color}dd)` }}
+    >
       {name.charAt(0).toUpperCase()}
     </div>
   );
@@ -19,7 +30,13 @@ function Avatar({ name = "?", size = "md" }) {
 function formatTime(dateStr) {
   if (!dateStr) return "";
   const d = new Date(dateStr);
-  return d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  return d.toLocaleTimeString("fr-FR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 export default function AgentDashboard() {
@@ -59,9 +76,13 @@ export default function AgentDashboard() {
       setConversations((prev) =>
         prev.map((conv) =>
           conv._id === data.conversationId
-            ? { ...conv, lastMessage: data.message.contenu, updatedAt: new Date().toISOString() }
-            : conv
-        )
+            ? {
+                ...conv,
+                lastMessage: data.message.contenu,
+                updatedAt: new Date().toISOString(),
+              }
+            : conv,
+        ),
       );
     });
 
@@ -90,7 +111,10 @@ export default function AgentDashboard() {
   const replyMessage = async () => {
     if (!contenu.trim() || !selected) return;
     try {
-      const res = await axios.post(`/messages/conversations/${selected._id}/reply`, { contenu });
+      const res = await axios.post(
+        `/messages/conversations/${selected._id}/reply`,
+        { contenu },
+      );
       setMessages((prev) => [...prev, res.data]);
       setContenu("");
     } catch (err) {
@@ -117,7 +141,8 @@ export default function AgentDashboard() {
 
   const activeConvs = conversations.filter((c) => c.status !== "closed");
   const closedConvs = conversations.filter((c) => c.status === "closed");
-  const displayedConvs = activeTab === "conversations" ? activeConvs : closedConvs;
+  const displayedConvs =
+    activeTab === "conversations" ? activeConvs : closedConvs;
 
   return (
     <div className="dashboard">
@@ -131,7 +156,14 @@ export default function AgentDashboard() {
       <aside className={`sidebar ${sidebarOpen ? "mobile-open" : ""}`}>
         <div className="sidebar-logo">
           <div className="sidebar-logo-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
           </div>
@@ -144,19 +176,43 @@ export default function AgentDashboard() {
         <nav className="sidebar-nav">
           <button
             className={`nav-item ${activeTab === "conversations" ? "active" : ""}`}
-            onClick={() => { setActiveTab("conversations"); setSidebarOpen(false); }}
+            onClick={() => {
+              setActiveTab("conversations");
+              setMobilePanel("list");
+              setSidebarOpen(false);
+            }}
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
             Conversations
-            {activeConvs.length > 0 && <span className="nav-badge">{activeConvs.length}</span>}
+            {activeConvs.length > 0 && (
+              <span className="nav-badge">{activeConvs.length}</span>
+            )}
           </button>
           <button
             className={`nav-item ${activeTab === "history" ? "active" : ""}`}
-            onClick={() => { setActiveTab("history"); setSidebarOpen(false); }}
+            onClick={() => {
+              setActiveTab("history");
+              setMobilePanel("list");
+              setSidebarOpen(false);
+            }}
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <circle cx="12" cy="12" r="10" />
               <polyline points="12 6 12 12 16 14" />
             </svg>
@@ -169,12 +225,26 @@ export default function AgentDashboard() {
           <div className="sidebar-user-info">
             <p>{user.nom}</p>
             <span>
-              <span className="status-dot status-online" style={{ width: 6, height: 6 }} />
+              <span
+                className="status-dot status-online"
+                style={{ width: 6, height: 6 }}
+              />
               En ligne
             </span>
           </div>
-          <button className="logout-btn" onClick={handleLogout} title="Déconnexion">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <button
+            className="logout-btn"
+            onClick={handleLogout}
+            title="Déconnexion"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
               <polyline points="16 17 21 12 16 7" />
               <line x1="21" y1="12" x2="9" y2="12" />
@@ -184,7 +254,9 @@ export default function AgentDashboard() {
       </aside>
 
       {/* Conversation List */}
-      <section className="conv-panel">
+      <section
+        className={`conv-panel ${mobilePanel === "chat" ? "mobile-hidden" : ""}`}
+      >
         <div className="conv-panel-header">
           <div className="flex items-center gap-2">
             {/* Mobile menu button */}
@@ -193,7 +265,16 @@ export default function AgentDashboard() {
               onClick={() => setSidebarOpen(true)}
               style={{ marginRight: "0.25rem" }}
             >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <line x1="3" y1="12" x2="21" y2="12" />
                 <line x1="3" y1="6" x2="21" y2="6" />
                 <line x1="3" y1="18" x2="21" y2="18" />
@@ -204,7 +285,11 @@ export default function AgentDashboard() {
                 {activeTab === "conversations" ? "Conversations" : "Historique"}
                 <span className="conv-count">{displayedConvs.length}</span>
               </h2>
-              <p>{activeTab === "conversations" ? "Discussions actives" : "Discussions terminées"}</p>
+              <p>
+                {activeTab === "conversations"
+                  ? "Discussions actives"
+                  : "Discussions terminées"}
+              </p>
             </div>
           </div>
         </div>
@@ -212,13 +297,10 @@ export default function AgentDashboard() {
         <div className="conv-items">
           {displayedConvs.length === 0 ? (
             <div className="conv-empty">
-              <div className="conv-empty-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                </svg>
-              </div>
               <p style={{ fontWeight: 600 }}>Aucune discussion</p>
-              <p style={{ fontSize: "0.8rem" }}>Attendez qu'un client démarre une conversation.</p>
+              <p style={{ fontSize: "0.8rem" }}>
+                Attendez qu'un client démarre une conversation.
+              </p>
             </div>
           ) : (
             displayedConvs.map((conv, idx) => (
@@ -237,7 +319,9 @@ export default function AgentDashboard() {
                   <div className="conv-item-bottom">
                     <p>{conv.lastMessage || "Message initial..."}</p>
                     <div className="flex items-center gap-2">
-                      <span className={`priority-pill priority-${conv.priority || "normal"}`}>
+                      <span
+                        className={`priority-pill priority-${conv.priority || "normal"}`}
+                      >
                         {conv.priority || "normal"}
                       </span>
                       <span
@@ -247,14 +331,14 @@ export default function AgentDashboard() {
                             conv.status === "active"
                               ? "var(--success)"
                               : conv.status === "pending"
-                              ? "var(--warning)"
-                              : "var(--text-dim)",
+                                ? "var(--warning)"
+                                : "var(--text-dim)",
                           boxShadow:
                             conv.status === "active"
                               ? "0 0 6px var(--success-glow)"
                               : conv.status === "pending"
-                              ? "0 0 6px var(--warning-glow)"
-                              : "none",
+                                ? "0 0 6px var(--warning-glow)"
+                                : "none",
                         }}
                       />
                     </div>
@@ -267,17 +351,31 @@ export default function AgentDashboard() {
       </section>
 
       {/* Chat Area */}
-      <section className="chat-area">
+      <section
+        className={`chat-area ${mobilePanel === "list" ? "mobile-hidden" : ""}`}
+      >
         {selected ? (
           <>
             <div className="chat-header">
               <div className="chat-header-info">
                 <button
                   className="btn-ghost mobile-menu-btn"
-                  onClick={() => { setSelected(null); setMobilePanel("list"); }}
+                  onClick={() => {
+                    setSelected(null);
+                    setMobilePanel("list");
+                  }}
                   style={{ marginRight: "0.25rem" }}
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <polyline points="15 18 9 12 15 6" />
                   </svg>
                 </button>
@@ -285,13 +383,25 @@ export default function AgentDashboard() {
                 <div>
                   <h3>{selected.clientId?.nom || "Client"}</h3>
                   <p>
-                    <span className="status-dot status-online" style={{ width: 6, height: 6 }} />
+                    <span
+                      className="status-dot status-online"
+                      style={{ width: 6, height: 6 }}
+                    />
                     {selected.subject || "Support client"}
                   </p>
                 </div>
               </div>
               <button className="btn btn-danger" onClick={closeConversation}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <line x1="18" y1="6" x2="6" y2="18" />
                   <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
@@ -301,30 +411,40 @@ export default function AgentDashboard() {
 
             <div className="chat-messages">
               {messages.length === 0 ? (
-                <div className="chat-placeholder" style={{ paddingTop: "3rem" }}>
-                  <div className="chat-placeholder-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                    </svg>
-                  </div>
+                <div
+                  className="chat-placeholder"
+                  style={{ paddingTop: "3rem" }}
+                >
                   <h3>Conversation ouverte</h3>
                   <p>Rédigez une réponse pour démarrer la discussion.</p>
                 </div>
               ) : (
                 messages.map((msg, idx) => {
-                  const isAgent = msg.senderId?._id === user.id || msg.senderId === user.id;
+                  const isAgent =
+                    msg.senderId?._id === user.id || msg.senderId === user.id;
                   return (
                     <div
                       key={msg._id || idx}
                       className={`message-row ${isAgent ? "sent" : "received"}`}
                       style={{ animationDelay: `${idx * 0.04}s` }}
                     >
-                      {!isAgent && <Avatar name={selected.clientId?.nom || "C"} size="sm" />}
-                      <div className={`message-bubble ${isAgent ? "sent" : "received"}`}>
-                        <div className={`bubble-text ${isAgent ? "sent" : "received"}`}>
+                      {!isAgent && (
+                        <Avatar
+                          name={selected.clientId?.nom || "C"}
+                          size="sm"
+                        />
+                      )}
+                      <div
+                        className={`message-bubble ${isAgent ? "sent" : "received"}`}
+                      >
+                        <div
+                          className={`bubble-text ${isAgent ? "sent" : "received"}`}
+                        >
                           {msg.contenu}
                         </div>
-                        <span className="bubble-time">{formatTime(msg.createdAt)}</span>
+                        <span className="bubble-time">
+                          {formatTime(msg.createdAt)}
+                        </span>
                       </div>
                       {isAgent && <Avatar name={user.nom} size="sm" />}
                     </div>
@@ -343,7 +463,11 @@ export default function AgentDashboard() {
                   onChange={(e) => setContenu(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && replyMessage()}
                 />
-                <button className="send-btn" onClick={replyMessage} disabled={!contenu.trim()}>
+                <button
+                  className="send-btn"
+                  onClick={replyMessage}
+                  disabled={!contenu.trim()}
+                >
                   <svg viewBox="0 0 24 24">
                     <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
                   </svg>
@@ -355,12 +479,28 @@ export default function AgentDashboard() {
         ) : (
           <div className="chat-placeholder">
             <div className="chat-placeholder-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               </svg>
             </div>
             <h3>Sélectionnez une conversation</h3>
-            <p>Les messages du client apparaîtront ici une fois la session ouverte.</p>
+            <p>
+              Les messages du client apparaîtront ici une fois la session
+              ouverte.
+            </p>
+            <button
+              className="btn btn-primary open-list-btn"
+              onClick={() => setSidebarOpen(true)}
+            >
+              Voir les conversations
+            </button>
           </div>
         )}
       </section>

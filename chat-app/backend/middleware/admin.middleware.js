@@ -1,5 +1,5 @@
 module.exports = (req, res, next) => {
-  if (!["admin", "superAdmin"].includes(req.user.role)) {
+  if (req.user.role !== "admin") {
     return res.status(403).json({ message: "Accès refusé" });
   }
   next();

@@ -51,6 +51,7 @@ exports.sendMessage = async (req, res) => {
       contenu,
     });
 
+    await message.populate("senderId", "nom role");
     await updateConversationAfterMessage(conversation, message);
 
     if (conversation.agentId) {
@@ -197,12 +198,17 @@ exports.replyMessage = async (req, res) => {
       contenu,
     });
 
+    await message.populate("senderId", "nom role");
     await updateConversationAfterMessage(conversation, message);
+
     emitToUser(conversation.clientId, "newMessage", {
       message,
       conversationId,
     });
-    emitToConversation(conversationId, "conversationUpdated", { conversation });
+    emitToConversation(conversationId, "newMessage", {
+      message,
+      conversationId,
+    });
 
     res.status(201).json(message);
   } catch (error) {

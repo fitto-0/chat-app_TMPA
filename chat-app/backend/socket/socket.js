@@ -34,7 +34,7 @@ const initSocket = (server) => {
     await User.findByIdAndUpdate(id, { isOnline: true });
 
     socket.join(`user:${id}`);
-    if (['agent', 'admin', 'superAdmin'].includes(role)) {
+    if (['agent', 'admin'].includes(role)) {
       socket.join('agents');
     }
 

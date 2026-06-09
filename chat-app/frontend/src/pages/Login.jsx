@@ -17,7 +17,7 @@ export default function Login() {
     try {
       const res = await axios.post("/auth/login", form);
       login(res.data.user, res.data.token);
-      if (res.data.user.role === "admin" || res.data.user.role === "superAdmin") navigate("/admin");
+      if (res.data.user.role === "admin") navigate("/admin");
       else if (res.data.user.role === "agent") navigate("/agent");
       else navigate("/chat");
     } catch (err) {

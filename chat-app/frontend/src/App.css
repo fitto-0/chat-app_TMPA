@@ -180,15 +180,17 @@ button {
 .dashboard {
   display: grid;
   grid-template-columns: 260px 300px minmax(0, 1fr);
-  min-height: 100vh;
+  height: 100vh;
   gap: 1rem;
   padding: 1rem;
+  overflow: hidden;
 }
 
 .sidebar,
 .sidebar-panel,
 .chat-panel,
-.admin-panel {
+.admin-panel,
+.conv-panel {
   background: var(--color-surface);
 }
 
@@ -198,6 +200,72 @@ button {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  position: sticky;
+  top: 1rem;
+  max-height: calc(100vh - 2rem);
+  min-height: 0;
+  z-index: 20;
+}
+
+.sidebar.mobile-open {
+  transform: translateX(0);
+}
+
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition);
+  z-index: 15;
+}
+
+.sidebar-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.mobile-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 0.95rem;
+  border: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--color-text);
+}
+
+.open-list-btn {
+  margin-top: 1rem;
+  width: fit-content;
+}
+
+.conv-panel {
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 1rem;
+  max-height: calc(100vh - 2rem);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.conv-panel-header {
+  flex: 0 0 auto;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  z-index: 1;
+}
+
+.conv-items {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 0.75rem 1.25rem 1rem;
+  min-height: 0;
 }
 
 .sidebar-logo,
@@ -325,9 +393,11 @@ button {
   border-bottom: 1px solid var(--color-border);
 }
 
-.chat-body {
-  flex: 1;
-  overflow-y: auto;
+.chat-area {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: calc(100vh - 2rem);
 }
 
 .chat-panel {
@@ -336,6 +406,8 @@ button {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  height: 100%;
 }
 
 .chat-panel .chat-header,
@@ -343,10 +415,23 @@ button {
   padding: 1rem 1.25rem;
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
+  z-index: 2;
 }
 
 .chat-panel .chat-header {
   gap: 1rem;
+}
+
+.chat-panel .chat-footer {
+  border-top: 1px solid var(--color-border);
+}
+
+.chat-messages {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 1.25rem;
+  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+  min-height: 0;
 }
 
 .conversation-card {
@@ -385,17 +470,14 @@ button {
   background: #f97316;
 }
 
-.chat-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 1.25rem;
-  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
-}
-
 .chat-footer {
   padding: 0.9rem 1.25rem;
   display: grid;
   gap: 0.75rem;
+  background: var(--color-surface);
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
 }
 
 .chat-footer .input-group {
@@ -444,9 +526,53 @@ button {
    ================================================================ */
 @media (max-width: 1024px) {
   .dashboard {
-    grid-template-columns: 240px 1fr;
+    grid-template-columns: 1fr;
     gap: 0.75rem;
     padding: 0.75rem;
+  }
+
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: min(320px, 80vw);
+    transform: translateX(-120%);
+    transition: transform var(--transition);
+    border-radius: 0;
+    max-height: 100vh;
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .sidebar-overlay,
+  .sidebar.mobile-open + .sidebar-overlay {
+    display: block;
+  }
+
+  .conv-panel {
+    position: relative;
+    top: 0;
+    max-height: none;
+    overflow: hidden;
+  }
+
+  .conv-panel.mobile-hidden,
+  .chat-area.mobile-hidden {
+    display: none;
+  }
+
+  .conv-panel-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--color-surface);
+  }
+
+  .conv-items {
+    padding: 0.75rem 1.25rem 1rem;
   }
 }
 
@@ -457,9 +583,20 @@ button {
     gap: 0.5rem;
   }
 
-  .chat-widget {
-    max-width: 100%;
-    height: 100vh;
-    border-radius: 0;
+  .sidebar {
+    width: 100%;
+  }
+
+  .chat-panel {
+    min-height: auto;
+    height: auto;
+  }
+
+  .chat-area {
+    height: auto;
+  }
+
+  .chat-messages {
+    min-height: 280px;
   }
 }

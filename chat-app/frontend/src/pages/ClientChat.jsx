@@ -20,12 +20,23 @@ export default function ClientChat() {
       // Simulate inheritance from TMPA Portal (SSO)
       const mockSSO = async () => {
         try {
-          const res = await axios.post("/auth/login", { email: "demo@tangermed.ma", password: "tm-password" });
+          const res = await axios.post("/auth/login", {
+            email: "demo@tangermed.ma",
+            password: "tm-password",
+          });
           login(res.data.user, res.data.token);
         } catch (err) {
           try {
-            await axios.post("/auth/register", { nom: "Utilisateur TMPA", email: "demo@tangermed.ma", password: "tm-password", role: "client" });
-            const res = await axios.post("/auth/login", { email: "demo@tangermed.ma", password: "tm-password" });
+            await axios.post("/auth/register", {
+              nom: "Utilisateur TMPA",
+              email: "demo@tangermed.ma",
+              password: "tm-password",
+              role: "client",
+            });
+            const res = await axios.post("/auth/login", {
+              email: "demo@tangermed.ma",
+              password: "tm-password",
+            });
             login(res.data.user, res.data.token);
           } catch (e) {
             console.error("SSO Simulation failed", e);
@@ -181,18 +192,6 @@ export default function ClientChat() {
             <div className="widget-messages">
               {messages.length === 0 ? (
                 <div className="widget-empty">
-                  <div className="widget-empty-icon">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                    </svg>
-                  </div>
                   <h4>Prêt à vous aider</h4>
                   <p>
                     Tapez votre question ci-dessous pour contacter un agent de
