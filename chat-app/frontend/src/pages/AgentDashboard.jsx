@@ -3,6 +3,7 @@ import axios from "../api/axios";
 import socket from "../socket/socket";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import logo from "../assets/logo.png";
 
 const AVATAR_COLORS = [
   "#6366f1",
@@ -156,19 +157,13 @@ export default function AgentDashboard() {
       <aside className={`sidebar ${sidebarOpen ? "mobile-open" : ""}`}>
         <div className="sidebar-logo">
           <div className="sidebar-logo-icon">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="white"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
+            <img
+              src={logo}
+              alt="TMPA Logo"
+              style={{ maxWidth: "100%", height: "auto" }}
+            />
           </div>
           <div className="sidebar-logo-text">
-            <h2>ChatSupport</h2>
             <p>Tableau agent</p>
           </div>
         </div>
@@ -495,12 +490,6 @@ export default function AgentDashboard() {
               Les messages du client apparaîtront ici une fois la session
               ouverte.
             </p>
-            <button
-              className="btn btn-primary open-list-btn"
-              onClick={() => setSidebarOpen(true)}
-            >
-              Voir les conversations
-            </button>
           </div>
         )}
       </section>

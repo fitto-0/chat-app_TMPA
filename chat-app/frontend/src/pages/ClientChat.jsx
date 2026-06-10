@@ -3,6 +3,7 @@ import axios from "../api/axios";
 import socket from "../socket/socket";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import logo from "../assets/logo.png";
 
 export default function ClientChat() {
   const [messages, setMessages] = useState([]);
@@ -16,36 +17,7 @@ export default function ClientChat() {
   const bottomRef = useRef(null);
 
   useEffect(() => {
-    if (!user) {
-      // Simulate inheritance from TMPA Portal (SSO)
-      const mockSSO = async () => {
-        try {
-          const res = await axios.post("/auth/login", {
-            email: "demo@tangermed.ma",
-            password: "tm-password",
-          });
-          login(res.data.user, res.data.token);
-        } catch (err) {
-          try {
-            await axios.post("/auth/register", {
-              nom: "Utilisateur TMPA",
-              email: "demo@tangermed.ma",
-              password: "tm-password",
-              role: "client",
-            });
-            const res = await axios.post("/auth/login", {
-              email: "demo@tangermed.ma",
-              password: "tm-password",
-            });
-            login(res.data.user, res.data.token);
-          } catch (e) {
-            console.error("SSO Simulation failed", e);
-          }
-        }
-      };
-      mockSSO();
-      return;
-    }
+    if (!user) return;
 
     socket.emit("join", user.id);
 
@@ -73,6 +45,11 @@ export default function ClientChat() {
   const sendMessage = async () => {
     if (!contenu.trim()) return;
     setLoading(true);
+    if (!user) {
+      setLoading(false);
+      navigate("/login");
+      return;
+    }
     try {
       const res = await axios.post("/messages/send", {
         contenu,
@@ -96,6 +73,29 @@ export default function ClientChat() {
 
   return (
     <div className="widget-page">
+      <div className="hero-section">
+        <img
+          src="/src/assets/logo.png"
+          alt="Tanger Med"
+          className="hero-logo"
+        />
+
+        <h1>Bienvenue sur le Support Tanger Med</h1>
+
+        <p>
+          Notre équipe est disponible pour répondre à vos questions et vous
+          accompagner dans vos démarches.
+        </p>
+
+        <a
+          href="https://www.tangermedport.com/en/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hero-btn"
+        >
+          Visiter le site officiel
+        </a>
+      </div>
       {!isOpen ? (
         <button
           className="widget-toggle hover:scale-105 active:scale-95 animate-scale-in"
@@ -157,34 +157,55 @@ export default function ClientChat() {
                     <polyline points="6 9 12 15 18 9" />
                   </svg>
                 </button>
-                <button onClick={handleLogout} title="Déconnexion">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                {user ? (
+                  <button onClick={handleLogout} title="Déconnexion">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                      <polyline points="16 17 21 12 16 7" />
+                      <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => navigate("/login")}
+                    title="Se connecter"
                   >
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                    <polyline points="16 17 21 12 16 7" />
-                    <line x1="21" y1="12" x2="9" y2="12" />
-                  </svg>
-                </button>
+                    Se connecter
+                  </button>
+                )}
               </div>
             </div>
 
             {/* Welcome */}
             <div className="widget-welcome">
               <div className="widget-welcome-card">
-                <h4>Bienvenue, {user.nom} 👋</h4>
-                <p>
-                  Vous êtes connecté en tant que{" "}
-                  <strong style={{ color: "var(--accent-light)" }}>
-                    {user.role}
-                  </strong>
-                  . Envoyez un message pour démarrer la conversation.
-                </p>
+                {user ? (
+                  <>
+                    <h4>Bienvenue, {user.nom} 👋</h4>
+                    <p>
+                      Vous êtes connecté en tant que{" "}
+                      <strong style={{ color: "var(--accent-light)" }}>
+                        {user.role}
+                      </strong>
+                      . Envoyez un message pour démarrer la conversation.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h4>Bienvenue</h4>
+                    <p>
+                      Vous n'êtes pas connecté. Cliquez sur "Se connecter" en
+                      haut pour accéder au support.
+                    </p>
+                  </>
+                )}
               </div>
             </div>
 
@@ -201,7 +222,8 @@ export default function ClientChat() {
               ) : (
                 messages.map((msg, idx) => {
                   const isMe =
-                    msg.senderId === user.id || msg.senderId?._id === user.id;
+                    user &&
+                    (msg.senderId === user.id || msg.senderId?._id === user.id);
                   return (
                     <div
                       key={msg._id || idx}

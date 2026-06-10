@@ -201,10 +201,6 @@ exports.replyMessage = async (req, res) => {
     await message.populate("senderId", "nom role");
     await updateConversationAfterMessage(conversation, message);
 
-    emitToUser(conversation.clientId, "newMessage", {
-      message,
-      conversationId,
-    });
     emitToConversation(conversationId, "newMessage", {
       message,
       conversationId,

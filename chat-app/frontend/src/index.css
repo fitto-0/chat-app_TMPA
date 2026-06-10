@@ -1,5 +1,5 @@
 /* ================================================================
-   ChatSupport - Premium Dark Design System
+   ChatSupport - Premium light Design System
    ================================================================ */
 
 /* ---- Reset ---- */
@@ -16,6 +16,7 @@
   --bg-deep: #ecf0ff;
   --bg-base: #a9c0ff;
   --bg-surface: #c6d5ff;
+  --bg-blured: #d7e2ff;
   --bg-card: #8ca5ff;
   --bg-elevated: #d7e2ff;
   --bg-hover: #53689f;
@@ -662,16 +663,14 @@ button {
 }
 
 .auth-brand-icon {
-  width: 56px;
+  width: auto;
   height: 56px;
-  background: linear-gradient(135deg, var(--accent), #8b5cf6);
+  background: transparent;
   border-radius: var(--radius-lg);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 1rem;
-  box-shadow: 0 8px 24px var(--accent-glow);
-  animation: float 4s ease-in-out infinite;
 }
 
 .auth-brand h1 {
@@ -780,14 +779,13 @@ button {
 }
 
 .sidebar-logo-icon {
-  width: 40px;
+  width: auto;
   height: 40px;
-  background: linear-gradient(135deg, var(--accent), #8b5cf6);
+  background: transparent;
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px var(--accent-glow);
   flex-shrink: 0;
 }
 
@@ -1360,7 +1358,7 @@ button {
 }
 
 .widget-box {
-  background: var(--bg-surface);
+  background: var(--bg-blured);
   border-radius: var(--radius-xl);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-lg);
@@ -1369,6 +1367,8 @@ button {
   overflow: hidden;
   height: 600px;
   max-height: calc(100vh - 120px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 .widget-header {
@@ -1748,6 +1748,52 @@ button {
 .agent-card-info span {
   font-size: 0.8rem;
   color: var(--text-muted);
+}
+
+.hero-section {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  max-width: 700px;
+  padding: 2rem;
+}
+
+.hero-logo {
+  width: 180px;
+  margin-bottom: 1.5rem;
+}
+
+.hero-section h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: #0f172a;
+}
+
+.hero-section p {
+  font-size: 1.1rem;
+  color: #64748b;
+  margin-bottom: 2rem;
+  line-height: 1.7;
+}
+
+.hero-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.9rem 1.8rem;
+  border-radius: 12px;
+  text-decoration: none;
+  background: var(--accent);
+  color: white;
+  font-weight: 600;
+  transition: 0.3s;
+}
+
+.hero-btn:hover {
+  transform: translateY(-2px);
+  background: var(--accent-dark);
 }
 
 /* ================================================================

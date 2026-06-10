@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import logo from "../assets/logo.png";
 
 const AVATAR_COLORS = ["#6366f1", "#8b5cf6", "#ec4899", "#14b8a6", "#f59e0b", "#ef4444", "#06b6d4"];
 
@@ -82,14 +83,10 @@ export default function AdminDashboard() {
       {/* Sidebar */}
       <aside className={`sidebar ${sidebarOpen ? "mobile-open" : ""}`}>
         <div className="sidebar-logo">
-          <div className="sidebar-logo-icon" style={{ background: "linear-gradient(135deg, #8b5cf6, #6d28d9)" }}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
-            </svg>
+          <div className="sidebar-logo-icon">
+            <img src={logo} alt="TMPA Logo" style={{ maxWidth: "100%", height: "auto" }} />
           </div>
           <div className="sidebar-logo-text">
-            <h2>ChatSupport</h2>
             <p>Administration</p>
           </div>
         </div>

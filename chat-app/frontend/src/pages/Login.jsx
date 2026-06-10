@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "../api/axios";
 import { useAuth } from "../context/AuthContext";
+import logo from "../assets/logo.png";
 
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -32,20 +33,8 @@ export default function Login() {
       <div className="auth-card glass">
         <div className="auth-brand">
           <div className="auth-brand-icon">
-            <svg
-              width="28"
-              height="28"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="white"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
+            <img src={logo} alt="TMPA Logo" style={{ maxWidth: "100%", height: "auto" }} />
           </div>
-          <h1>ChatSupport</h1>
           <p>Connectez-vous à votre espace de support</p>
         </div>
 
