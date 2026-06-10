@@ -1,0 +1,130 @@
+/* ================================================================
+   ADMIN SPECIFIC
+   ================================================================ */
+
+.admin-main {
+  grid-column: span 2;
+  background: var(--bg-deep);
+  overflow-y: auto;
+  animation: fadeIn 0.5s ease 0.15s both;
+}
+
+.admin-main-header {
+  padding: 1.5rem 2rem 0;
+}
+
+.admin-main-header h2 {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.admin-main-header p {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.admin-content {
+  padding: 1.5rem 2rem;
+}
+
+.admin-form-card {
+  max-width: 500px;
+}
+
+.admin-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.agent-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.agent-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-base);
+}
+
+.agent-card:hover {
+  border-color: var(--glass-border);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.agent-card-info {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.agent-card-info div {
+  min-width: 0;
+}
+
+.agent-card-info p {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.agent-card-info span {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.hero-section {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  max-width: 700px;
+  padding: 2rem;
+}
+
+.hero-logo {
+  width: 180px;
+  margin-bottom: 1.5rem;
+}
+
+.hero-section h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: #0f172a;
+}
+
+.hero-section p {
+  font-size: 1.1rem;
+  color: #64748b;
+  margin-bottom: 2rem;
+  line-height: 1.7;
+}
+
+.hero-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.9rem 1.8rem;
+  border-radius: 12px;
+  text-decoration: none;
+  background: var(--accent);
+  color: white;
+  font-weight: 600;
+  transition: 0.3s;
+}
+
+.hero-btn:hover {
+  transform: translateY(-2px);
+  background: var(--accent-dark);
+}

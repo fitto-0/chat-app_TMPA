@@ -5,7 +5,6 @@ import Register from "./pages/Register";
 import ClientChat from "./pages/ClientChat";
 import AgentDashboard from "./pages/AgentDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
-import "./App.css";
 
 const ProtectedRoute = ({ children, role }) => {
   const { user } = useAuth();
