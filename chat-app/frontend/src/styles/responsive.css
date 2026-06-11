@@ -19,22 +19,7 @@
 /* Tablet */
 @media (max-width: 1024px) {
   .dashboard {
-    grid-template-columns: 260px minmax(0, 1fr);
-  }
-
-  .conv-panel {
-    display: none;
-  }
-
-  .conv-panel.mobile-show {
-    display: flex;
-    position: fixed;
-    top: 0;
-    left: 260px;
-    width: 320px;
-    height: 100vh;
-    z-index: 80;
-    border-right: 1px solid var(--border);
+    grid-template-columns: 240px 290px minmax(0, 1fr);
   }
 }
 
@@ -62,18 +47,17 @@
     display: block;
   }
 
-  .conv-panel {
-    display: none;
-  }
-
-  .conv-panel.mobile-show {
-    display: flex;
-    position: fixed;
-    top: 0;
-    left: 0;
+  .conv-panel,
+  .chat-area {
+    grid-column: 1;
+    grid-row: 1;
     width: 100%;
     height: 100vh;
-    z-index: 80;
+  }
+
+  .conv-panel.mobile-hidden,
+  .chat-area.mobile-hidden {
+    display: none;
   }
 
   .mobile-menu-btn {
