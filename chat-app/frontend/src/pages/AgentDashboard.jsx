@@ -420,6 +420,7 @@ export default function AgentDashboard() {
                   return (
                     <div
                       key={msg._id || idx}
+                      //key={msg._id}
                       className={`message-row ${isAgent ? "sent" : "received"}`}
                       style={{ animationDelay: `${idx * 0.04}s` }}
                     >

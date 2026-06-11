@@ -75,7 +75,7 @@ export default function ClientChat() {
     <div className="widget-page">
       <div className="hero-section">
         <img
-          src="/src/assets/logo.png"
+          src={logo}
           alt="Tanger Med"
           className="hero-logo"
         />

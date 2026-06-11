@@ -2,9 +2,60 @@
    CLIENT CHAT WIDGET
    ================================================================ */
 
-/*.widget-page {
-   No longer a full screen flex container, just a wrapper 
-}*/
+.widget-page {
+  min-height: 100vh;
+  position: relative;
+  background: var(--bg-deep);
+  overflow: hidden;
+}
+
+.hero-section {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(100%, 700px);
+  transform: translate(-50%, -50%);
+  text-align: center;
+  padding: 2rem;
+}
+
+.hero-logo {
+  width: 180px;
+  max-width: min(60vw, 180px);
+  height: auto;
+  margin-bottom: 1.5rem;
+}
+
+.hero-section h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: #0f172a;
+}
+
+.hero-section p {
+  font-size: 1.1rem;
+  color: #64748b;
+  margin-bottom: 2rem;
+  line-height: 1.7;
+}
+
+.hero-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.9rem 1.8rem;
+  border-radius: 12px;
+  text-decoration: none;
+  background: var(--accent);
+  color: white;
+  font-weight: 600;
+  transition: 0.3s;
+}
+
+.hero-btn:hover {
+  transform: translateY(-2px);
+  background: var(--accent-dark);
+}
 
 .widget-toggle {
   position: fixed;
