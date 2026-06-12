@@ -116,7 +116,6 @@ export default function AgentDashboard() {
         `/messages/conversations/${selected._id}/reply`,
         { contenu },
       );
-      setMessages((prev) => [...prev, res.data]);
       setContenu("");
     } catch (err) {
       console.error(err);
