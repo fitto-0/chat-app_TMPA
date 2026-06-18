@@ -212,6 +212,63 @@ exports.replyMessage = async (req, res) => {
   }
 };
 
+exports.markMessagesAsRead = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const userId = req.user.id;
+    const role = req.user.role;
+
+    const conversation = await Conversation.findById(conversationId);
+    if (!conversation) {
+      return res.status(404).json({ message: "Conversation introuvable" });
+    }
+
+    if (role === "client" && conversation.clientId.toString() !== userId) {
+      return res.status(403).json({ message: "Accès refusé" });
+    }
+
+    if (
+      role === "agent" &&
+      conversation.agentId &&
+      conversation.agentId.toString() !== userId &&
+      conversation.status === "active"
+    ) {
+      return res.status(403).json({ message: "Accès refusé" });
+    }
+
+    const unreadMessages = await Message.find({
+      conversationId,
+      senderId: { $ne: userId },
+      isRead: false,
+    });
+
+    if (unreadMessages.length === 0) {
+      return res.status(200).json({ messageIds: [], readAt: null });
+    }
+
+    const messageIds = unreadMessages.map((m) => m._id);
+    const readAt = new Date();
+
+    await Message.updateMany(
+      { _id: { $in: messageIds } },
+      { isRead: true, readAt },
+    );
+
+    const senderIds = [
+      ...new Set(unreadMessages.map((m) => m.senderId.toString())),
+    ];
+    const payload = { conversationId, messageIds, readAt };
+
+    senderIds.forEach((senderId) => {
+      emitToUser(senderId, "messagesSeen", payload);
+    });
+
+    res.status(200).json({ messageIds, readAt });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 exports.closeConversation = async (req, res) => {
   try {
     const { conversationId } = req.params;

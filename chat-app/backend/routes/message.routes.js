@@ -9,12 +9,18 @@ const {
   assignConversation,
   replyMessage,
   closeConversation,
+  markMessagesAsRead,
 } = require("../controllers/message.controller");
 
 // Client routes
 router.post("/send", auth, permit("client"), sendMessage);
 router.get("/conversations", auth, getConversations);
 router.get("/conversations/:conversationId", auth, getMessages);
+router.put(
+  "/conversations/:conversationId/read",
+  auth,
+  markMessagesAsRead,
+);
 
 // Agent routes
 router.post(

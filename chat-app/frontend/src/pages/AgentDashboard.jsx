@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import axios from "../api/axios";
 import socket from "../socket/socket";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import SeenStatus from "../components/SeenStatus";
 import logo from "../assets/logo.png";
 
 const AVATAR_COLORS = [
@@ -52,6 +53,22 @@ export default function AgentDashboard() {
   const navigate = useNavigate();
   const bottomRef = useRef(null);
 
+  const isOwnMessage = useCallback(
+    (msg) =>
+      user &&
+      (msg.senderId?._id === user.id || msg.senderId === user.id),
+    [user],
+  );
+
+  const markAsRead = useCallback(async (convId) => {
+    if (!convId) return;
+    try {
+      await axios.put(`/messages/conversations/${convId}/read`);
+    } catch (err) {
+      console.error(err);
+    }
+  }, []);
+
   const fetchConversations = async () => {
     try {
       const res = await axios.get("/messages/conversations");
@@ -87,15 +104,50 @@ export default function AgentDashboard() {
       );
     });
 
+    socket.on("messagesSeen", (data) => {
+      if (
+        selected &&
+        data.conversationId?.toString() !== selected._id?.toString()
+      ) {
+        return;
+      }
+      setMessages((prev) =>
+        prev.map((msg) => {
+          if (
+            isOwnMessage(msg) &&
+            data.messageIds?.some(
+              (id) => id.toString() === (msg._id?.toString?.() ?? msg._id),
+            )
+          ) {
+            return { ...msg, isRead: true, readAt: data.readAt };
+          }
+          return msg;
+        }),
+      );
+    });
+
     return () => {
       socket.off("newConversation");
       socket.off("newMessage");
+      socket.off("messagesSeen");
     };
-  }, [selected, user]);
+  }, [selected, user, isOwnMessage]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    if (!selected) return;
+
+    const hasUnreadFromOther = messages.some(
+      (msg) => !isOwnMessage(msg) && !msg.isRead,
+    );
+
+    if (hasUnreadFromOther) {
+      markAsRead(selected._id);
+    }
+  }, [selected, messages, isOwnMessage, markAsRead]);
 
   const openConversation = async (conv) => {
     setSelected(conv);
@@ -414,12 +466,10 @@ export default function AgentDashboard() {
                 </div>
               ) : (
                 messages.map((msg, idx) => {
-                  const isAgent =
-                    msg.senderId?._id === user.id || msg.senderId === user.id;
+                  const isAgent = isOwnMessage(msg);
                   return (
                     <div
                       key={msg._id || idx}
-                      //key={msg._id}
                       className={`message-row ${isAgent ? "sent" : "received"}`}
                       style={{ animationDelay: `${idx * 0.04}s` }}
                     >
@@ -439,6 +489,7 @@ export default function AgentDashboard() {
                         </div>
                         <span className="bubble-time">
                           {formatTime(msg.createdAt)}
+                          {isAgent && <SeenStatus isRead={msg.isRead} />}
                         </span>
                       </div>
                       {isAgent && <Avatar name={user.nom} size="sm" />}

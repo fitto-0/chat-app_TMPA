@@ -444,6 +444,39 @@
   font-size: 0.7rem;
   color: var(--text-dim);
   padding: 0 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.seen-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.65rem;
+  line-height: 1;
+}
+
+.seen-status svg {
+  width: 14px;
+  height: 10px;
+  flex-shrink: 0;
+}
+
+.seen-status.seen-sent {
+  opacity: 0.55;
+}
+
+.seen-status.seen-read {
+  color: #53bdeb;
+}
+
+.seen-status.seen-read .seen-label {
+  font-weight: 500;
+}
+
+.message-bubble.sent .bubble-time {
+  justify-content: flex-end;
 }
 
 /* Chat Input */

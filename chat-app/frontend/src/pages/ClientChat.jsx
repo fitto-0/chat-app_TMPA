@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import axios from "../api/axios";
 import socket from "../socket/socket";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import SeenStatus from "../components/SeenStatus";
 import logo from "../assets/logo.png";
 
 export default function ClientChat() {
@@ -16,6 +17,46 @@ export default function ClientChat() {
   const navigate = useNavigate();
   const bottomRef = useRef(null);
 
+  const isOwnMessage = useCallback(
+    (msg) =>
+      user &&
+      (msg.senderId === user.id || msg.senderId?._id === user.id),
+    [user],
+  );
+
+  const markAsRead = useCallback(async (convId) => {
+    if (!convId) return;
+    try {
+      await axios.put(`/messages/conversations/${convId}/read`);
+    } catch (err) {
+      console.error(err);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const loadConversation = async () => {
+      try {
+        const res = await axios.get("/messages/conversations");
+        const active = res.data.find((c) => c.status !== "closed");
+        if (active) {
+          const msgRes = await axios.get(
+            `/messages/conversations/${active._id}`,
+          );
+          setConversationId(active._id);
+          setMessages(msgRes.data.messages || []);
+          setIsClosed(active.status === "closed");
+          socket.emit("joinConversation", active._id);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    loadConversation();
+  }, [user]);
+
   useEffect(() => {
     if (!user) return;
 
@@ -28,15 +69,44 @@ export default function ClientChat() {
       }
     });
 
+    socket.on("messagesSeen", (data) => {
+      setMessages((prev) =>
+        prev.map((msg) => {
+          if (
+            isOwnMessage(msg) &&
+            data.messageIds?.some(
+              (id) => id.toString() === (msg._id?.toString?.() ?? msg._id),
+            )
+          ) {
+            return { ...msg, isRead: true, readAt: data.readAt };
+          }
+          return msg;
+        }),
+      );
+    });
+
     socket.on("conversationClosed", () => {
       setIsClosed(true);
     });
 
     return () => {
       socket.off("newMessage");
+      socket.off("messagesSeen");
       socket.off("conversationClosed");
     };
-  }, [user]);
+  }, [user, isOwnMessage]);
+
+  useEffect(() => {
+    if (!conversationId || !isOpen || !user) return;
+
+    const hasUnreadFromOther = messages.some(
+      (msg) => !isOwnMessage(msg) && !msg.isRead,
+    );
+
+    if (hasUnreadFromOther) {
+      markAsRead(conversationId);
+    }
+  }, [conversationId, isOpen, messages, user, isOwnMessage, markAsRead]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -221,9 +291,7 @@ export default function ClientChat() {
                 </div>
               ) : (
                 messages.map((msg, idx) => {
-                  const isMe =
-                    user &&
-                    (msg.senderId === user.id || msg.senderId?._id === user.id);
+                  const isMe = isOwnMessage(msg);
                   return (
                     <div
                       key={msg._id || idx}
@@ -243,9 +311,18 @@ export default function ClientChat() {
                         </div>
                       )}
                       <div
-                        className={`chat-bubble ${isMe ? "sent" : "received"}`}
+                        className={`chat-bubble-wrap ${isMe ? "" : "received-wrap"}`}
                       >
-                        {msg.contenu}
+                        <div
+                          className={`chat-bubble ${isMe ? "sent" : "received"}`}
+                        >
+                          {msg.contenu}
+                        </div>
+                        {isMe && (
+                          <div className="chat-bubble-meta">
+                            <SeenStatus isRead={msg.isRead} />
+                          </div>
+                        )}
                       </div>
                     </div>
                   );

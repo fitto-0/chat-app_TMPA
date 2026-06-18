@@ -404,3 +404,30 @@
   border: 1px solid var(--border);
   border-bottom-left-radius: 4px;
 }
+
+.chat-bubble-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  max-width: 280px;
+}
+
+.chat-bubble-wrap.received-wrap {
+  align-items: flex-start;
+}
+
+.chat-bubble-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.2rem;
+  padding: 0 0.15rem;
+}
+
+.chat-bubble-meta .seen-status.seen-read {
+  color: #53bdeb;
+}
+
+.chat-bubble-meta .seen-status.seen-sent {
+  color: rgba(255, 255, 255, 0.65);
+}
