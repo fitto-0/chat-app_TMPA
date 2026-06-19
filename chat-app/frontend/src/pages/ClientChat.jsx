@@ -1,9 +1,24 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import Box from "@mui/material/Box";
+import Paper from "@mui/material/Paper";
+import Typography from "@mui/material/Typography";
+import TextField from "@mui/material/TextField";
+import IconButton from "@mui/material/IconButton";
+import Fab from "@mui/material/Fab";
+import Button from "@mui/material/Button";
+import Alert from "@mui/material/Alert";
+import Stack from "@mui/material/Stack";
+import CircularProgress from "@mui/material/CircularProgress";
+import ChatIcon from "@mui/icons-material/Chat";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import LogoutIcon from "@mui/icons-material/Logout";
+import SendIcon from "@mui/icons-material/Send";
 import axios from "../api/axios";
 import socket from "../socket/socket";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import SeenStatus from "../components/SeenStatus";
+import UserAvatar from "../components/UserAvatar";
 import logo from "../assets/logo.png";
 
 export default function ClientChat() {
@@ -13,14 +28,12 @@ export default function ClientChat() {
   const [isClosed, setIsClosed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const { user, login, logout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const bottomRef = useRef(null);
 
   const isOwnMessage = useCallback(
-    (msg) =>
-      user &&
-      (msg.senderId === user.id || msg.senderId?._id === user.id),
+    (msg) => user && (msg.senderId === user.id || msg.senderId?._id === user.id),
     [user],
   );
 
@@ -41,9 +54,7 @@ export default function ClientChat() {
         const res = await axios.get("/messages/conversations");
         const active = res.data.find((c) => c.status !== "closed");
         if (active) {
-          const msgRes = await axios.get(
-            `/messages/conversations/${active._id}`,
-          );
+          const msgRes = await axios.get(`/messages/conversations/${active._id}`);
           setConversationId(active._id);
           setMessages(msgRes.data.messages || []);
           setIsClosed(active.status === "closed");
@@ -64,9 +75,7 @@ export default function ClientChat() {
 
     socket.on("newMessage", (data) => {
       setMessages((prev) => [...prev, data.message]);
-      if (data.conversationId) {
-        setConversationId(data.conversationId);
-      }
+      if (data.conversationId) setConversationId(data.conversationId);
     });
 
     socket.on("messagesSeen", (data) => {
@@ -85,9 +94,7 @@ export default function ClientChat() {
       );
     });
 
-    socket.on("conversationClosed", () => {
-      setIsClosed(true);
-    });
+    socket.on("conversationClosed", () => setIsClosed(true));
 
     return () => {
       socket.off("newMessage");
@@ -98,14 +105,10 @@ export default function ClientChat() {
 
   useEffect(() => {
     if (!conversationId || !isOpen || !user) return;
-
     const hasUnreadFromOther = messages.some(
       (msg) => !isOwnMessage(msg) && !msg.isRead,
     );
-
-    if (hasUnreadFromOther) {
-      markAsRead(conversationId);
-    }
+    if (hasUnreadFromOther) markAsRead(conversationId);
   }, [conversationId, isOpen, messages, user, isOwnMessage, markAsRead]);
 
   useEffect(() => {
@@ -121,9 +124,7 @@ export default function ClientChat() {
       return;
     }
     try {
-      const res = await axios.post("/messages/send", {
-        contenu,
-      });
+      const res = await axios.post("/messages/send", { contenu });
       setConversationId(res.data.conversation._id);
       setMessages((prev) => [...prev, res.data.message]);
       socket.emit("joinConversation", res.data.conversation._id);
@@ -142,235 +143,217 @@ export default function ClientChat() {
   };
 
   return (
-    <div className="widget-page">
-      <div className="hero-section">
-        <img
-          src={logo}
-          alt="Tanger Med"
-          className="hero-logo"
-        />
-
-        <h1>Bienvenue sur le Support Tanger Med</h1>
-
-        <p>
+    <Box sx={{ minHeight: "100vh", position: "relative" }}>
+      <Box
+        sx={{
+          textAlign: "center",
+          py: { xs: 6, md: 10 },
+          px: 2,
+          maxWidth: 720,
+          mx: "auto",
+        }}
+      >
+        <Box component="img" src={logo} alt="Tanger Med" sx={{ maxWidth: 180, mb: 3 }} />
+        <Typography variant="h3" fontWeight={800} gutterBottom>
+          Bienvenue sur le Support Tanger Med
+        </Typography>
+        <Typography color="text.secondary" sx={{ mb: 4, lineHeight: 1.7 }}>
           Notre équipe est disponible pour répondre à vos questions et vous
           accompagner dans vos démarches.
-        </p>
-
-        <a
+        </Typography>
+        <Button
+          variant="contained"
+          size="large"
           href="https://www.tangermedport.com/en/"
           target="_blank"
           rel="noopener noreferrer"
-          className="hero-btn"
         >
           Visiter le site officiel
-        </a>
-      </div>
+        </Button>
+      </Box>
+
       {!isOpen ? (
-        <button
-          className="widget-toggle hover:scale-105 active:scale-95 animate-scale-in"
+        <Fab
+          color="primary"
           onClick={() => setIsOpen(true)}
           title="Ouvrir le support"
+          sx={{
+            position: "fixed",
+            bottom: 24,
+            right: 24,
+            width: 64,
+            height: 64,
+          }}
         >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="white"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            width="35px"
-          >
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-          </svg>
-        </button>
+          <ChatIcon sx={{ fontSize: 32 }} />
+        </Fab>
       ) : (
-        <div className="widget-container animate-scale-in">
-          <div className="widget-box">
-            {/* Header */}
-            <div className="widget-header">
-              <div className="widget-header-info">
-                <div className="widget-header-icon">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="white"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                  </svg>
-                </div>
-                <div className="widget-header-text">
-                  <h3>Support en direct</h3>
-                  <span>
-                    <span className="online-dot" />
-                    En ligne - réponse rapide
-                  </span>
-                </div>
-              </div>
-              <div className="widget-actions">
-                <button
-                  onClick={() => setIsOpen(false)}
-                  title="Réduire"
-                  style={{ marginRight: "0.2rem" }}
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
-                </button>
-                {user ? (
-                  <button onClick={handleLogout} title="Déconnexion">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                      <polyline points="16 17 21 12 16 7" />
-                      <line x1="21" y1="12" x2="9" y2="12" />
-                    </svg>
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => navigate("/login")}
-                    title="Se connecter"
-                  >
-                    Se connecter
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Welcome */}
-            <div className="widget-welcome">
-              <div className="widget-welcome-card">
-                {user ? (
-                  <>
-                    <h4>Bienvenue, {user.nom} 👋</h4>
-                    <p>
-                      Vous êtes connecté en tant que{" "}
-                      <strong style={{ color: "var(--accent-light)" }}>
-                        {user.role}
-                      </strong>
-                      . Envoyez un message pour démarrer la conversation.
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <h4>Bienvenue</h4>
-                    <p>
-                      Vous n'êtes pas connecté. Cliquez sur "Se connecter" en
-                      haut pour accéder au support.
-                    </p>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* Messages */}
-            <div className="widget-messages">
-              {messages.length === 0 ? (
-                <div className="widget-empty">
-                  <h4>Prêt à vous aider</h4>
-                  <p>
-                    Tapez votre question ci-dessous pour contacter un agent de
-                    support.
-                  </p>
-                </div>
+        <Paper
+          elevation={12}
+          sx={{
+            position: "fixed",
+            bottom: 24,
+            right: 24,
+            width: { xs: "calc(100% - 32px)", sm: 380 },
+            height: { xs: "calc(100vh - 48px)", sm: 560 },
+            maxHeight: "calc(100vh - 48px)",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+            borderRadius: 3,
+          }}
+        >
+          <Box
+            sx={{
+              bgcolor: "primary.main",
+              color: "white",
+              p: 2,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              <ChatIcon />
+              <Box>
+                <Typography variant="subtitle1" fontWeight={700}>
+                  Support en direct
+                </Typography>
+                <Typography variant="caption" sx={{ opacity: 0.9 }}>
+                  ● En ligne - réponse rapide
+                </Typography>
+              </Box>
+            </Stack>
+            <Stack direction="row" spacing={0.5}>
+              <IconButton size="small" onClick={() => setIsOpen(false)} sx={{ color: "white", minWidth: 0 }}>
+                <ExpandMoreIcon />
+              </IconButton>
+              {user ? (
+                <IconButton size="small" onClick={handleLogout} sx={{ color: "white", minWidth: 0 }}>
+                  <LogoutIcon fontSize="small" />
+                </IconButton>
               ) : (
-                messages.map((msg, idx) => {
-                  const isMe = isOwnMessage(msg);
-                  return (
-                    <div
-                      key={msg._id || idx}
-                      className={`flex items-end gap-2 ${isMe ? "justify-end" : "justify-start"}`}
-                      style={{ animationDelay: `${idx * 0.05}s` }}
-                    >
-                      {!isMe && (
-                        <div
-                          className="avatar avatar-sm"
-                          style={{
-                            background:
-                              "linear-gradient(135deg, #14b8a6, #0d9488)",
-                            fontSize: "0.7rem",
-                          }}
-                        >
-                          A
-                        </div>
-                      )}
-                      <div
-                        className={`chat-bubble-wrap ${isMe ? "" : "received-wrap"}`}
-                      >
-                        <div
-                          className={`chat-bubble ${isMe ? "sent" : "received"}`}
-                        >
-                          {msg.contenu}
-                        </div>
-                        {isMe && (
-                          <div className="chat-bubble-meta">
-                            <SeenStatus isRead={msg.isRead} />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })
+                <Button size="small" onClick={() => navigate("/login")} sx={{ color: "white" }}>
+                  Se connecter
+                </Button>
               )}
-              <div ref={bottomRef} />
-            </div>
+            </Stack>
+          </Box>
 
-            {/* Closed banner */}
-            {isClosed && (
-              <div className="widget-closed-banner">
-                <p>Conversation fermée</p>
-                <p>Un agent a clôturé cette discussion.</p>
-              </div>
+          <Box sx={{ p: 2, bgcolor: "grey.50", borderBottom: 1, borderColor: "divider" }}>
+            <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
+              {user ? (
+                <>
+                  <Typography variant="subtitle2" fontWeight={700}>
+                    Bienvenue, {user.nom} 👋
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Connecté en tant que{" "}
+                    <Typography component="span" color="primary.main" fontWeight={600}>
+                      {user.role}
+                    </Typography>
+                    . Envoyez un message pour démarrer.
+                  </Typography>
+                </>
+              ) : (
+                <>
+                  <Typography variant="subtitle2" fontWeight={700}>
+                    Bienvenue
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Connectez-vous pour accéder au support.
+                  </Typography>
+                </>
+              )}
+            </Paper>
+          </Box>
+
+          <Box sx={{ flex: 1, overflowY: "auto", p: 2, display: "flex", flexDirection: "column", gap: 1.5 }}>
+            {messages.length === 0 ? (
+              <Box sx={{ textAlign: "center", py: 4 }}>
+                <Typography variant="subtitle1" fontWeight={600}>
+                  Prêt à vous aider
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Tapez votre question ci-dessous pour contacter un agent.
+                </Typography>
+              </Box>
+            ) : (
+              messages.map((msg, idx) => {
+                const isMe = isOwnMessage(msg);
+                return (
+                  <Stack
+                    key={msg._id || idx}
+                    direction="row"
+                    spacing={1}
+                    justifyContent={isMe ? "flex-end" : "flex-start"}
+                    alignItems="flex-end"
+                  >
+                    {!isMe && <UserAvatar name="Agent" size="sm" />}
+                    <Box sx={{ maxWidth: "75%" }}>
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          px: 1.5,
+                          py: 1,
+                          borderRadius: 2,
+                          borderBottomRightRadius: isMe ? 4 : 16,
+                          borderBottomLeftRadius: isMe ? 16 : 4,
+                          bgcolor: isMe ? "primary.main" : "background.paper",
+                          color: isMe ? "white" : "text.primary",
+                          border: isMe ? "none" : 1,
+                          borderColor: "divider",
+                        }}
+                      >
+                        <Typography variant="body2">{msg.contenu}</Typography>
+                      </Paper>
+                      {isMe && (
+                        <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 0.25 }}>
+                          <SeenStatus isRead={msg.isRead} />
+                        </Box>
+                      )}
+                    </Box>
+                  </Stack>
+                );
+              })
             )}
+            <div ref={bottomRef} />
+          </Box>
 
-            {/* Input */}
-            <div className="widget-input-area">
-              <div className="widget-input-box">
-                <input
-                  type="text"
-                  value={contenu}
-                  onChange={(e) => setContenu(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                  placeholder="Écrire un message..."
-                  disabled={isClosed}
-                />
-                <button
-                  className="widget-send"
-                  onClick={sendMessage}
-                  disabled={!contenu.trim() || isClosed || loading}
-                >
-                  {loading ? (
-                    <span
-                      className="spinner"
-                      style={{ width: 14, height: 14, borderWidth: "1.5px" }}
-                    />
-                  ) : (
-                    <svg viewBox="0 0 24 24">
-                      <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
-                    </svg>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+          {isClosed && (
+            <Alert severity="warning" sx={{ borderRadius: 0 }}>
+              Conversation fermée — un agent a clôturé cette discussion.
+            </Alert>
+          )}
+
+          <Box sx={{ p: 1.5, borderTop: 1, borderColor: "divider", bgcolor: "background.paper" }}>
+            <Stack direction="row" spacing={1}>
+              <TextField
+                size="small"
+                fullWidth
+                placeholder="Écrire un message..."
+                value={contenu}
+                onChange={(e) => setContenu(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                disabled={isClosed}
+              />
+              <IconButton
+                color="primary"
+                onClick={sendMessage}
+                disabled={!contenu.trim() || isClosed || loading}
+                sx={{
+                  bgcolor: "primary.main",
+                  color: "white",
+                  "&:hover": { bgcolor: "primary.dark" },
+                  "&.Mui-disabled": { bgcolor: "action.disabledBackground" },
+                }}
+              >
+                {loading ? <CircularProgress size={20} color="inherit" /> : <SendIcon />}
+              </IconButton>
+            </Stack>
+          </Box>
+        </Paper>
       )}
-    </div>
+    </Box>
   );
 }

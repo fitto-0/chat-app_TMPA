@@ -1,5 +1,15 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link as RouterLink } from "react-router-dom";
+import Box from "@mui/material/Box";
+import Paper from "@mui/material/Paper";
+import Typography from "@mui/material/Typography";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
+import Alert from "@mui/material/Alert";
+import Link from "@mui/material/Link";
+import CircularProgress from "@mui/material/CircularProgress";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import axios from "../api/axios";
 
 export default function Register() {
@@ -15,7 +25,7 @@ export default function Register() {
     try {
       await axios.post("/auth/register", form);
       navigate("/login");
-    } catch (err) {
+    } catch {
       setError("Erreur lors de la création du compte");
     } finally {
       setLoading(false);
@@ -23,87 +33,88 @@ export default function Register() {
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-card glass">
-        <div className="auth-brand">
-          <div className="auth-brand-icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <line x1="19" y1="8" x2="19" y2="14" />
-              <line x1="22" y1="11" x2="16" y2="11" />
-            </svg>
-          </div>
-          <h1>Créer un compte</h1>
-          <p>Rejoignez ChatSupport en quelques secondes</p>
-        </div>
-
-        {error && <div className="auth-error">{error}</div>}
-
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <div className="auth-input-group">
-            <label htmlFor="reg-nom">Nom complet</label>
-            <input
-              id="reg-nom"
-              type="text"
-              placeholder="Votre nom"
-              className="input-field"
-              value={form.nom}
-              onChange={(e) => setForm({ ...form, nom: e.target.value })}
-              required
-            />
-          </div>
-          <div className="auth-input-group">
-            <label htmlFor="reg-email">Adresse email</label>
-            <input
-              id="reg-email"
-              type="email"
-              placeholder="votre@email.com"
-              className="input-field"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              required
-            />
-          </div>
-          <div className="auth-input-group">
-            <label htmlFor="reg-password">Mot de passe</label>
-            <input
-              id="reg-password"
-              type="password"
-              placeholder="••••••••"
-              className="input-field"
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            className="btn btn-primary w-full"
-            disabled={loading}
-            style={{ marginTop: "0.5rem", padding: "0.85rem" }}
+    <Box
+      sx={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        p: 2,
+      }}
+    >
+      <Paper elevation={8} sx={{ width: "100%", maxWidth: 420, p: 4, borderRadius: 3 }}>
+        <Box sx={{ textAlign: "center", mb: 3 }}>
+          <Box
+            sx={{
+              width: 56,
+              height: 56,
+              borderRadius: 2,
+              bgcolor: "primary.main",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              mb: 2,
+            }}
           >
-            {loading ? (
-              <>
-                <span className="spinner" />
-                Création...
-              </>
-            ) : (
-              <>
-                S'inscrire
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </>
-            )}
-          </button>
-        </form>
+            <PersonAddIcon sx={{ color: "white" }} />
+          </Box>
+          <Typography variant="h5" fontWeight={700}>
+            Créer un compte
+          </Typography>
+          <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+            Rejoignez ChatSupport en quelques secondes
+          </Typography>
+        </Box>
 
-        <p className="auth-link">
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
+        <Box component="form" onSubmit={handleSubmit} sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <TextField
+            label="Nom complet"
+            value={form.nom}
+            onChange={(e) => setForm({ ...form, nom: e.target.value })}
+            required
+            fullWidth
+          />
+          <TextField
+            label="Adresse email"
+            type="email"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            required
+            fullWidth
+          />
+          <TextField
+            label="Mot de passe"
+            type="password"
+            value={form.password}
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            required
+            fullWidth
+          />
+          <Button
+            type="submit"
+            variant="contained"
+            size="large"
+            disabled={loading}
+            endIcon={loading ? <CircularProgress size={18} color="inherit" /> : <ArrowForwardIcon />}
+            sx={{ mt: 1, py: 1.2 }}
+          >
+            {loading ? "Création..." : "S'inscrire"}
+          </Button>
+        </Box>
+
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 3, textAlign: "center" }}>
           Déjà un compte ?{" "}
-          <Link to="/login">Se connecter</Link>
-        </p>
-      </div>
-    </div>
+          <Link component={RouterLink} to="/login" underline="hover">
+            Se connecter
+          </Link>
+        </Typography>
+      </Paper>
+    </Box>
   );
 }

@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import Box from "@mui/material/Box";
+import Paper from "@mui/material/Paper";
+import Typography from "@mui/material/Typography";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
+import Alert from "@mui/material/Alert";
+import CircularProgress from "@mui/material/CircularProgress";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import axios from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 import logo from "../assets/logo.png";
@@ -21,7 +29,7 @@ export default function Login() {
       if (res.data.user.role === "admin") navigate("/admin");
       else if (res.data.user.role === "agent") navigate("/agent");
       else navigate("/chat");
-    } catch (err) {
+    } catch {
       setError("Email ou mot de passe incorrect");
     } finally {
       setLoading(false);
@@ -29,73 +37,74 @@ export default function Login() {
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-card glass">
-        <div className="auth-brand">
-          <div className="auth-brand-icon">
-            <img src={logo} alt="TMPA Logo" style={{ maxWidth: "100%", height: "auto" }} />
-          </div>
-          <p>Connectez-vous à votre espace de support</p>
-        </div>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        p: 2,
+      }}
+    >
+      <Paper
+        elevation={8}
+        sx={{
+          width: "100%",
+          maxWidth: 420,
+          p: 4,
+          borderRadius: 3,
+          backdropFilter: "blur(12px)",
+        }}
+      >
+        <Box sx={{ textAlign: "center", mb: 3 }}>
+          <Box
+            component="img"
+            src={logo}
+            alt="TMPA Logo"
+            sx={{ maxWidth: 120, height: "auto", mb: 2 }}
+          />
+          <Typography color="text.secondary">
+            Connectez-vous à votre espace de support
+          </Typography>
+        </Box>
 
-        {error && <div className="auth-error">{error}</div>}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
 
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <div className="auth-input-group">
-            <label htmlFor="login-email">Adresse email</label>
-            <input
-              id="login-email"
-              type="email"
-              placeholder="votre@email.com"
-              className="input-field"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              required
-            />
-          </div>
-          <div className="auth-input-group">
-            <label htmlFor="login-password">Mot de passe</label>
-            <input
-              id="login-password"
-              type="password"
-              placeholder="••••••••"
-              className="input-field"
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-              required
-            />
-          </div>
-          <button
+        <Box component="form" onSubmit={handleSubmit} sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <TextField
+            label="Adresse email"
+            type="email"
+            placeholder="votre@email.com"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            required
+            fullWidth
+          />
+          <TextField
+            label="Mot de passe"
+            type="password"
+            placeholder="••••••••"
+            value={form.password}
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            required
+            fullWidth
+          />
+          <Button
             type="submit"
-            className="btn btn-primary w-full"
+            variant="contained"
+            size="large"
             disabled={loading}
-            style={{ marginTop: "0.5rem", padding: "0.85rem" }}
+            endIcon={loading ? <CircularProgress size={18} color="inherit" /> : <ArrowForwardIcon />}
+            sx={{ mt: 1, py: 1.2 }}
           >
-            {loading ? (
-              <>
-                <span className="spinner" />
-                Connexion...
-              </>
-            ) : (
-              <>
-                Se connecter
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </>
-            )}
-          </button>
-        </form>
-      </div>
-    </div>
+            {loading ? "Connexion..." : "Se connecter"}
+          </Button>
+        </Box>
+      </Paper>
+    </Box>
   );
 }

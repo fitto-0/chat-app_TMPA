@@ -1,27 +1,29 @@
-export default function SeenStatus({ isRead, variant = "light" }) {
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import DoneIcon from "@mui/icons-material/Done";
+import DoneAllIcon from "@mui/icons-material/DoneAll";
+
+export default function SeenStatus({ isRead }) {
   return (
-    <span
-      className={`seen-status ${isRead ? "seen-read" : "seen-sent"} seen-${variant}`}
+    <Box
+      sx={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 0.25,
+        color: isRead ? "#53bdeb" : "rgba(255,255,255,0.65)",
+      }}
       title={isRead ? "Vu" : "Envoyé"}
     >
-      <svg viewBox="0 0 16 11" fill="none" aria-hidden="true">
-        <path
-          d="M1 5.5L4.5 9L10 2"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M5.5 5.5L9 9L15.5 2"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          opacity={isRead ? 1 : 0}
-        />
-      </svg>
-      {isRead && <span className="seen-label">Vu</span>}
-    </span>
+      {isRead ? (
+        <DoneAllIcon sx={{ fontSize: 14 }} />
+      ) : (
+        <DoneIcon sx={{ fontSize: 14 }} />
+      )}
+      {isRead && (
+        <Typography component="span" sx={{ fontSize: "0.65rem", fontWeight: 500 }}>
+          Vu
+        </Typography>
+      )}
+    </Box>
   );
 }

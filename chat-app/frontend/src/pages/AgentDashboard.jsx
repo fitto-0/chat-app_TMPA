@@ -1,45 +1,36 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import Box from "@mui/material/Box";
+import Paper from "@mui/material/Paper";
+import Typography from "@mui/material/Typography";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
+import IconButton from "@mui/material/IconButton";
+import Chip from "@mui/material/Chip";
+import Stack from "@mui/material/Stack";
+import ListItemButton from "@mui/material/ListItemButton";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { useTheme } from "@mui/material/styles";
+import MenuIcon from "@mui/icons-material/Menu";
+import ChatIcon from "@mui/icons-material/Chat";
+import HistoryIcon from "@mui/icons-material/History";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import CloseIcon from "@mui/icons-material/Close";
+import SendIcon from "@mui/icons-material/Send";
 import axios from "../api/axios";
 import socket from "../socket/socket";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import AppSidebar from "../components/AppSidebar";
 import SeenStatus from "../components/SeenStatus";
+import UserAvatar from "../components/UserAvatar";
+import formatTime from "../utils/formatTime";
 import logo from "../assets/logo.png";
 
-const AVATAR_COLORS = [
-  "#6366f1",
-  "#8b5cf6",
-  "#ec4899",
-  "#14b8a6",
-  "#f59e0b",
-  "#ef4444",
-  "#06b6d4",
-];
-
-function Avatar({ name = "?", size = "md" }) {
-  const color = AVATAR_COLORS[(name.charCodeAt(0) || 0) % AVATAR_COLORS.length];
-  const cls = `avatar avatar-${size}`;
-  return (
-    <div
-      className={cls}
-      style={{ background: `linear-gradient(135deg, ${color}, ${color}dd)` }}
-    >
-      {name.charAt(0).toUpperCase()}
-    </div>
-  );
-}
-
-function formatTime(dateStr) {
-  if (!dateStr) return "";
-  const d = new Date(dateStr);
-  return d.toLocaleTimeString("fr-FR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+const statusColor = {
+  active: "success",
+  pending: "warning",
+  closed: "default",
+};
 
 export default function AgentDashboard() {
   const [conversations, setConversations] = useState([]);
@@ -47,16 +38,16 @@ export default function AgentDashboard() {
   const [messages, setMessages] = useState([]);
   const [contenu, setContenu] = useState("");
   const [activeTab, setActiveTab] = useState("conversations");
-  const [mobilePanel, setMobilePanel] = useState("list"); // "list" | "chat"
+  const [mobilePanel, setMobilePanel] = useState("list");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const bottomRef = useRef(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const isOwnMessage = useCallback(
-    (msg) =>
-      user &&
-      (msg.senderId?._id === user.id || msg.senderId === user.id),
+    (msg) => user && (msg.senderId?._id === user.id || msg.senderId === user.id),
     [user],
   );
 
@@ -105,12 +96,7 @@ export default function AgentDashboard() {
     });
 
     socket.on("messagesSeen", (data) => {
-      if (
-        selected &&
-        data.conversationId?.toString() !== selected._id?.toString()
-      ) {
-        return;
-      }
+      if (selected && data.conversationId?.toString() !== selected._id?.toString()) return;
       setMessages((prev) =>
         prev.map((msg) => {
           if (
@@ -139,14 +125,10 @@ export default function AgentDashboard() {
 
   useEffect(() => {
     if (!selected) return;
-
     const hasUnreadFromOther = messages.some(
       (msg) => !isOwnMessage(msg) && !msg.isRead,
     );
-
-    if (hasUnreadFromOther) {
-      markAsRead(selected._id);
-    }
+    if (hasUnreadFromOther) markAsRead(selected._id);
   }, [selected, messages, isOwnMessage, markAsRead]);
 
   const openConversation = async (conv) => {
@@ -164,10 +146,7 @@ export default function AgentDashboard() {
   const replyMessage = async () => {
     if (!contenu.trim() || !selected) return;
     try {
-      const res = await axios.post(
-        `/messages/conversations/${selected._id}/reply`,
-        { contenu },
-      );
+      await axios.post(`/messages/conversations/${selected._id}/reply`, { contenu });
       setContenu("");
     } catch (err) {
       console.error(err);
@@ -193,357 +172,297 @@ export default function AgentDashboard() {
 
   const activeConvs = conversations.filter((c) => c.status !== "closed");
   const closedConvs = conversations.filter((c) => c.status === "closed");
-  const displayedConvs =
-    activeTab === "conversations" ? activeConvs : closedConvs;
+  const displayedConvs = activeTab === "conversations" ? activeConvs : closedConvs;
+
+  const navItems = [
+    {
+      id: "conversations",
+      label: "Conversations",
+      icon: <ChatIcon />,
+      badge: activeConvs.length || null,
+    },
+    {
+      id: "history",
+      label: "Historique",
+      icon: <HistoryIcon />,
+    },
+  ];
+
+  const showList = !isMobile || mobilePanel === "list";
+  const showChat = !isMobile || mobilePanel === "chat";
 
   return (
-    <div className="dashboard">
-      {/* Mobile overlay */}
-      <div
-        className={`sidebar-overlay ${sidebarOpen ? "show" : ""}`}
-        onClick={() => setSidebarOpen(false)}
+    <Box sx={{ display: "flex", minHeight: "100vh" }}>
+      <AppSidebar
+        mobileOpen={sidebarOpen}
+        onMobileClose={() => setSidebarOpen(false)}
+        logo={logo}
+        subtitle="Tableau agent"
+        navItems={navItems}
+        activeTab={activeTab}
+        onTabChange={(tab) => {
+          setActiveTab(tab);
+          setMobilePanel("list");
+          setSidebarOpen(false);
+        }}
+        user={user}
+        roleLabel="En ligne"
+        onLogout={handleLogout}
       />
 
-      {/* Sidebar */}
-      <aside className={`sidebar ${sidebarOpen ? "mobile-open" : ""}`}>
-        <div className="sidebar-logo">
-          <div className="sidebar-logo-icon">
-            <img
-              src={logo}
-              alt="TMPA Logo"
-              style={{ maxWidth: "100%", height: "auto" }}
-            />
-          </div>
-          <div className="sidebar-logo-text">
-            <p>Tableau agent</p>
-          </div>
-        </div>
-
-        <nav className="sidebar-nav">
-          <button
-            className={`nav-item ${activeTab === "conversations" ? "active" : ""}`}
-            onClick={() => {
-              setActiveTab("conversations");
-              setMobilePanel("list");
-              setSidebarOpen(false);
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          minWidth: 0,
+          ml: { md: 0 },
+        }}
+      >
+        {showList && (
+          <Paper
+            elevation={0}
+            sx={{
+              width: { xs: "100%", md: 320 },
+              borderRight: 1,
+              borderColor: "divider",
+              display: "flex",
+              flexDirection: "column",
+              bgcolor: "background.paper",
             }}
           >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
-            Conversations
-            {activeConvs.length > 0 && (
-              <span className="nav-badge">{activeConvs.length}</span>
-            )}
-          </button>
-          <button
-            className={`nav-item ${activeTab === "history" ? "active" : ""}`}
-            onClick={() => {
-              setActiveTab("history");
-              setMobilePanel("list");
-              setSidebarOpen(false);
-            }}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
-            Historique
-          </button>
-        </nav>
-
-        <div className="sidebar-user">
-          <Avatar name={user.nom} size="sm" />
-          <div className="sidebar-user-info">
-            <p>{user.nom}</p>
-            <span>
-              <span
-                className="status-dot status-online"
-                style={{ width: 6, height: 6 }}
-              />
-              En ligne
-            </span>
-          </div>
-          <button
-            className="logout-btn"
-            onClick={handleLogout}
-            title="Déconnexion"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-              <polyline points="16 17 21 12 16 7" />
-              <line x1="21" y1="12" x2="9" y2="12" />
-            </svg>
-          </button>
-        </div>
-      </aside>
-
-      {/* Conversation List */}
-      <section
-        className={`conv-panel ${mobilePanel === "chat" ? "mobile-hidden" : ""}`}
-      >
-        <div className="conv-panel-header">
-          <div className="flex items-center gap-2">
-            {/* Mobile menu button */}
-            <button
-              className="mobile-menu-btn btn-ghost"
-              onClick={() => setSidebarOpen(true)}
-              style={{ marginRight: "0.25rem" }}
-            >
-              <svg
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="3" y1="18" x2="21" y2="18" />
-              </svg>
-            </button>
-            <div>
-              <h2>
-                {activeTab === "conversations" ? "Conversations" : "Historique"}
-                <span className="conv-count">{displayedConvs.length}</span>
-              </h2>
-              <p>
-                {activeTab === "conversations"
-                  ? "Discussions actives"
-                  : "Discussions terminées"}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="conv-items">
-          {displayedConvs.length === 0 ? (
-            <div className="conv-empty">
-              <p style={{ fontWeight: 600 }}>Aucune discussion</p>
-              <p style={{ fontSize: "0.8rem" }}>
-                Attendez qu'un client démarre une conversation.
-              </p>
-            </div>
-          ) : (
-            displayedConvs.map((conv, idx) => (
-              <div
-                key={conv._id}
-                className={`conv-item ${selected?._id === conv._id ? "selected" : ""}`}
-                onClick={() => openConversation(conv)}
-                style={{ animationDelay: `${idx * 0.05}s` }}
-              >
-                <Avatar name={conv.clientId?.nom || "C"} size="md" />
-                <div className="conv-item-info">
-                  <div className="conv-item-top">
-                    <p>{conv.clientId?.nom || "Client"}</p>
-                    <span>{formatTime(conv.updatedAt)}</span>
-                  </div>
-                  <div className="conv-item-bottom">
-                    <p>{conv.lastMessage || "Message initial..."}</p>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`priority-pill priority-${conv.priority || "normal"}`}
-                      >
-                        {conv.priority || "normal"}
-                      </span>
-                      <span
-                        className="status-dot"
-                        style={{
-                          background:
-                            conv.status === "active"
-                              ? "var(--success)"
-                              : conv.status === "pending"
-                                ? "var(--warning)"
-                                : "var(--text-dim)",
-                          boxShadow:
-                            conv.status === "active"
-                              ? "0 0 6px var(--success-glow)"
-                              : conv.status === "pending"
-                                ? "0 0 6px var(--warning-glow)"
-                                : "none",
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </section>
-
-      {/* Chat Area */}
-      <section
-        className={`chat-area ${mobilePanel === "list" ? "mobile-hidden" : ""}`}
-      >
-        {selected ? (
-          <>
-            <div className="chat-header">
-              <div className="chat-header-info">
-                <button
-                  className="btn-ghost mobile-menu-btn"
-                  onClick={() => {
-                    setSelected(null);
-                    setMobilePanel("list");
-                  }}
-                  style={{ marginRight: "0.25rem" }}
+            <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider" }}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <IconButton
+                  sx={{ display: { md: "none" } }}
+                  onClick={() => setSidebarOpen(true)}
                 >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="15 18 9 12 15 6" />
-                  </svg>
-                </button>
-                <Avatar name={selected.clientId?.nom || "C"} size="lg" />
-                <div>
-                  <h3>{selected.clientId?.nom || "Client"}</h3>
-                  <p>
-                    <span
-                      className="status-dot status-online"
-                      style={{ width: 6, height: 6 }}
-                    />
-                    {selected.subject || "Support client"}
-                  </p>
-                </div>
-              </div>
-              <button className="btn btn-danger" onClick={closeConversation}>
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-                Fermer
-              </button>
-            </div>
+                  <MenuIcon />
+                </IconButton>
+                <Box>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Typography variant="h6" fontWeight={700}>
+                      {activeTab === "conversations" ? "Conversations" : "Historique"}
+                    </Typography>
+                    <Chip label={displayedConvs.length} size="small" />
+                  </Stack>
+                  <Typography variant="caption" color="text.secondary">
+                    {activeTab === "conversations"
+                      ? "Discussions actives"
+                      : "Discussions terminées"}
+                  </Typography>
+                </Box>
+              </Stack>
+            </Box>
 
-            <div className="chat-messages">
-              {messages.length === 0 ? (
-                <div
-                  className="chat-placeholder"
-                  style={{ paddingTop: "3rem" }}
-                >
-                  <h3>Conversation ouverte</h3>
-                  <p>Rédigez une réponse pour démarrer la discussion.</p>
-                </div>
+            <Box sx={{ flex: 1, overflowY: "auto" }}>
+              {displayedConvs.length === 0 ? (
+                <Box sx={{ p: 4, textAlign: "center" }}>
+                  <Typography fontWeight={600}>Aucune discussion</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Attendez qu'un client démarre une conversation.
+                  </Typography>
+                </Box>
               ) : (
-                messages.map((msg, idx) => {
-                  const isAgent = isOwnMessage(msg);
-                  return (
-                    <div
-                      key={msg._id || idx}
-                      className={`message-row ${isAgent ? "sent" : "received"}`}
-                      style={{ animationDelay: `${idx * 0.04}s` }}
-                    >
-                      {!isAgent && (
-                        <Avatar
-                          name={selected.clientId?.nom || "C"}
-                          size="sm"
+                displayedConvs.map((conv) => (
+                  <ListItemButton
+                    key={conv._id}
+                    selected={selected?._id === conv._id}
+                    onClick={() => openConversation(conv)}
+                    sx={{
+                      py: 1.5,
+                      alignItems: "flex-start",
+                      borderBottom: 1,
+                      borderColor: "divider",
+                    }}
+                  >
+                    <UserAvatar name={conv.clientId?.nom || "C"} size="md" />
+                    <Box sx={{ ml: 1.5, flex: 1, minWidth: 0 }}>
+                      <Stack direction="row" justifyContent="space-between" alignItems="center">
+                        <Typography variant="body2" fontWeight={600} noWrap>
+                          {conv.clientId?.nom || "Client"}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {formatTime(conv.updatedAt)}
+                        </Typography>
+                      </Stack>
+                      <Typography variant="body2" color="text.secondary" noWrap sx={{ mt: 0.25 }}>
+                        {conv.lastMessage || "Message initial..."}
+                      </Typography>
+                      <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
+                        <Chip
+                          label={conv.priority || "normal"}
+                          size="small"
+                          variant="outlined"
                         />
-                      )}
-                      <div
-                        className={`message-bubble ${isAgent ? "sent" : "received"}`}
-                      >
-                        <div
-                          className={`bubble-text ${isAgent ? "sent" : "received"}`}
-                        >
-                          {msg.contenu}
-                        </div>
-                        <span className="bubble-time">
-                          {formatTime(msg.createdAt)}
-                          {isAgent && <SeenStatus isRead={msg.isRead} />}
-                        </span>
-                      </div>
-                      {isAgent && <Avatar name={user.nom} size="sm" />}
-                    </div>
-                  );
-                })
+                        <Chip
+                          label={conv.status}
+                          size="small"
+                          color={statusColor[conv.status] || "default"}
+                        />
+                      </Stack>
+                    </Box>
+                  </ListItemButton>
+                ))
               )}
-              <div ref={bottomRef} />
-            </div>
-
-            <div className="chat-input-area">
-              <div className="chat-input-box">
-                <input
-                  type="text"
-                  placeholder="Répondre au client..."
-                  value={contenu}
-                  onChange={(e) => setContenu(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && replyMessage()}
-                />
-                <button
-                  className="send-btn"
-                  onClick={replyMessage}
-                  disabled={!contenu.trim()}
-                >
-                  <svg viewBox="0 0 24 24">
-                    <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
-                  </svg>
-                  Envoyer
-                </button>
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="chat-placeholder">
-            <div className="chat-placeholder-icon">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-              </svg>
-            </div>
-            <h3>Sélectionnez une conversation</h3>
-            <p>
-              Les messages du client apparaîtront ici une fois la session
-              ouverte.
-            </p>
-          </div>
+            </Box>
+          </Paper>
         )}
-      </section>
-    </div>
+
+        {showChat && (
+          <Box sx={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+            {selected ? (
+              <>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 2,
+                    borderBottom: 1,
+                    borderColor: "divider",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    bgcolor: "background.paper",
+                  }}
+                >
+                  <Stack direction="row" spacing={1.5} alignItems="center">
+                    <IconButton
+                      sx={{ display: { md: "none" } }}
+                      onClick={() => {
+                        setSelected(null);
+                        setMobilePanel("list");
+                      }}
+                    >
+                      <ArrowBackIcon />
+                    </IconButton>
+                    <UserAvatar name={selected.clientId?.nom || "C"} size="lg" />
+                    <Box>
+                      <Typography variant="subtitle1" fontWeight={700}>
+                        {selected.clientId?.nom || "Client"}
+                      </Typography>
+                      <Typography variant="caption" color="success.main">
+                        ● {selected.subject || "Support client"}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    size="small"
+                    startIcon={<CloseIcon />}
+                    onClick={closeConversation}
+                  >
+                    Fermer
+                  </Button>
+                </Paper>
+
+                <Box sx={{ flex: 1, overflowY: "auto", p: 2, display: "flex", flexDirection: "column", gap: 1.5 }}>
+                  {messages.length === 0 ? (
+                    <Box sx={{ textAlign: "center", pt: 6 }}>
+                      <Typography variant="h6">Conversation ouverte</Typography>
+                      <Typography color="text.secondary">
+                        Rédigez une réponse pour démarrer la discussion.
+                      </Typography>
+                    </Box>
+                  ) : (
+                    messages.map((msg, idx) => {
+                      const isAgent = isOwnMessage(msg);
+                      return (
+                        <Stack
+                          key={msg._id || idx}
+                          direction="row"
+                          spacing={1}
+                          justifyContent={isAgent ? "flex-end" : "flex-start"}
+                          alignItems="flex-end"
+                        >
+                          {!isAgent && (
+                            <UserAvatar name={selected.clientId?.nom || "C"} size="sm" />
+                          )}
+                          <Box sx={{ maxWidth: "70%" }}>
+                            <Paper
+                              elevation={0}
+                              sx={{
+                                px: 1.5,
+                                py: 1,
+                                borderRadius: 2,
+                                borderBottomRightRadius: isAgent ? 4 : 16,
+                                borderBottomLeftRadius: isAgent ? 16 : 4,
+                                bgcolor: isAgent ? "primary.main" : "background.paper",
+                                color: isAgent ? "white" : "text.primary",
+                                border: isAgent ? "none" : 1,
+                                borderColor: "divider",
+                              }}
+                            >
+                              <Typography variant="body2">{msg.contenu}</Typography>
+                            </Paper>
+                            <Stack
+                              direction="row"
+                              spacing={0.5}
+                              alignItems="center"
+                              justifyContent={isAgent ? "flex-end" : "flex-start"}
+                              sx={{ mt: 0.25, px: 0.5 }}
+                            >
+                              <Typography variant="caption" color="text.secondary">
+                                {formatTime(msg.createdAt)}
+                              </Typography>
+                              {isAgent && <SeenStatus isRead={msg.isRead} />}
+                            </Stack>
+                          </Box>
+                          {isAgent && <UserAvatar name={user.nom} size="sm" />}
+                        </Stack>
+                      );
+                    })
+                  )}
+                  <div ref={bottomRef} />
+                </Box>
+
+                <Paper
+                  elevation={0}
+                  sx={{ p: 2, borderTop: 1, borderColor: "divider", bgcolor: "background.paper" }}
+                >
+                  <Stack direction="row" spacing={1}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      placeholder="Répondre au client..."
+                      value={contenu}
+                      onChange={(e) => setContenu(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && replyMessage()}
+                    />
+                    <Button
+                      variant="contained"
+                      onClick={replyMessage}
+                      disabled={!contenu.trim()}
+                      endIcon={<SendIcon />}
+                    >
+                      Envoyer
+                    </Button>
+                  </Stack>
+                </Paper>
+              </>
+            ) : (
+              <Box
+                sx={{
+                  flex: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  p: 4,
+                  textAlign: "center",
+                }}
+              >
+                <ChatIcon sx={{ fontSize: 64, color: "text.disabled", mb: 2 }} />
+                <Typography variant="h6" gutterBottom>
+                  Sélectionnez une conversation
+                </Typography>
+                <Typography color="text.secondary">
+                  Les messages du client apparaîtront ici une fois la session ouverte.
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        )}
+      </Box>
+    </Box>
   );
 }

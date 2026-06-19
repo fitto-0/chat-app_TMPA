@@ -1,7 +1,23 @@
-@import "./styles/base.css";
-@import "./styles/auth.css";
-@import "./styles/dashboard.css";
-@import "./styles/widget.css";
-@import "./styles/admin.css";
-@import "./styles/responsive.css";
-@import "./styles/utilities.css";
+/* Global scrollbar styling */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
