@@ -66,11 +66,16 @@ export default function AppSidebar({
               },
             }}
           >
-            <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
+            <ListItemIcon sx={{ minWidth: 40 }}>
+              {item.badge ? (
+                <Badge badgeContent={item.badge} color="error" max={99}>
+                  {item.icon}
+                </Badge>
+              ) : (
+                item.icon
+              )}
+            </ListItemIcon>
             <ListItemText primary={item.label} />
-            {item.badge ? (
-              <Badge badgeContent={item.badge} color="error" sx={{ mr: 1 }} />
-            ) : null}
           </ListItemButton>
         ))}
       </List>

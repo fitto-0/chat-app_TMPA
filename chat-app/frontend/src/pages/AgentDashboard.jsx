@@ -21,8 +21,9 @@ import socket from "../socket/socket";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import AppSidebar from "../components/AppSidebar";
-import SeenStatus from "../components/SeenStatus";
+import ChatMessage from "../components/ChatMessage";
 import UserAvatar from "../components/UserAvatar";
+import { isOwnMessage as checkOwnMessage } from "../utils/messageHelpers";
 import formatTime from "../utils/formatTime";
 import logo from "../assets/logo.png";
 
@@ -47,7 +48,7 @@ export default function AgentDashboard() {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const isOwnMessage = useCallback(
-    (msg) => user && (msg.senderId?._id === user.id || msg.senderId === user.id),
+    (msg) => checkOwnMessage(msg, user?.id),
     [user],
   );
 
@@ -367,48 +368,15 @@ export default function AgentDashboard() {
                     messages.map((msg, idx) => {
                       const isAgent = isOwnMessage(msg);
                       return (
-                        <Stack
+                        <ChatMessage
                           key={msg._id || idx}
-                          direction="row"
-                          spacing={1}
-                          justifyContent={isAgent ? "flex-end" : "flex-start"}
-                          alignItems="flex-end"
-                        >
-                          {!isAgent && (
-                            <UserAvatar name={selected.clientId?.nom || "C"} size="sm" />
-                          )}
-                          <Box sx={{ maxWidth: "70%" }}>
-                            <Paper
-                              elevation={0}
-                              sx={{
-                                px: 1.5,
-                                py: 1,
-                                borderRadius: 2,
-                                borderBottomRightRadius: isAgent ? 4 : 16,
-                                borderBottomLeftRadius: isAgent ? 16 : 4,
-                                bgcolor: isAgent ? "primary.main" : "background.paper",
-                                color: isAgent ? "white" : "text.primary",
-                                border: isAgent ? "none" : 1,
-                                borderColor: "divider",
-                              }}
-                            >
-                              <Typography variant="body2">{msg.contenu}</Typography>
-                            </Paper>
-                            <Stack
-                              direction="row"
-                              spacing={0.5}
-                              alignItems="center"
-                              justifyContent={isAgent ? "flex-end" : "flex-start"}
-                              sx={{ mt: 0.25, px: 0.5 }}
-                            >
-                              <Typography variant="caption" color="text.secondary">
-                                {formatTime(msg.createdAt)}
-                              </Typography>
-                              {isAgent && <SeenStatus isRead={msg.isRead} />}
-                            </Stack>
-                          </Box>
-                          {isAgent && <UserAvatar name={user.nom} size="sm" />}
-                        </Stack>
+                          msg={msg}
+                          isOwn={isAgent}
+                          avatarName={
+                            isAgent ? user.nom : selected.clientId?.nom || "C"
+                          }
+                          showTime
+                        />
                       );
                     })
                   )}

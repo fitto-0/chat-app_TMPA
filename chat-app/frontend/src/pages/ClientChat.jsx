@@ -17,8 +17,8 @@ import axios from "../api/axios";
 import socket from "../socket/socket";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import SeenStatus from "../components/SeenStatus";
-import UserAvatar from "../components/UserAvatar";
+import ChatMessage from "../components/ChatMessage";
+import { isOwnMessage as checkOwnMessage } from "../utils/messageHelpers";
 import logo from "../assets/logo.png";
 
 export default function ClientChat() {
@@ -33,7 +33,7 @@ export default function ClientChat() {
   const bottomRef = useRef(null);
 
   const isOwnMessage = useCallback(
-    (msg) => user && (msg.senderId === user.id || msg.senderId?._id === user.id),
+    (msg) => checkOwnMessage(msg, user?.id),
     [user],
   );
 
@@ -279,43 +279,15 @@ export default function ClientChat() {
                 </Typography>
               </Box>
             ) : (
-              messages.map((msg, idx) => {
-                const isMe = isOwnMessage(msg);
-                return (
-                  <Stack
-                    key={msg._id || idx}
-                    direction="row"
-                    spacing={1}
-                    justifyContent={isMe ? "flex-end" : "flex-start"}
-                    alignItems="flex-end"
-                  >
-                    {!isMe && <UserAvatar name="Agent" size="sm" />}
-                    <Box sx={{ maxWidth: "75%" }}>
-                      <Paper
-                        elevation={0}
-                        sx={{
-                          px: 1.5,
-                          py: 1,
-                          borderRadius: 2,
-                          borderBottomRightRadius: isMe ? 4 : 16,
-                          borderBottomLeftRadius: isMe ? 16 : 4,
-                          bgcolor: isMe ? "primary.main" : "background.paper",
-                          color: isMe ? "white" : "text.primary",
-                          border: isMe ? "none" : 1,
-                          borderColor: "divider",
-                        }}
-                      >
-                        <Typography variant="body2">{msg.contenu}</Typography>
-                      </Paper>
-                      {isMe && (
-                        <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 0.25 }}>
-                          <SeenStatus isRead={msg.isRead} />
-                        </Box>
-                      )}
-                    </Box>
-                  </Stack>
-                );
-              })
+              messages.map((msg, idx) => (
+                <ChatMessage
+                  key={msg._id || idx}
+                  msg={msg}
+                  isOwn={isOwnMessage(msg)}
+                  avatarName={isOwnMessage(msg) ? user?.nom : "Agent"}
+                  showAvatar={!isOwnMessage(msg)}
+                />
+              ))
             )}
             <div ref={bottomRef} />
           </Box>
