@@ -74,7 +74,11 @@ export default function Login() {
           </Alert>
         )}
 
-        <Box component="form" onSubmit={handleSubmit} sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        <Box
+          component="form"
+          onSubmit={handleSubmit}
+          sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+        >
           <TextField
             label="Adresse email"
             type="email"
@@ -98,7 +102,13 @@ export default function Login() {
             variant="contained"
             size="large"
             disabled={loading}
-            endIcon={loading ? <CircularProgress size={18} color="inherit" /> : <ArrowForwardIcon />}
+            endIcon={
+              loading ? (
+                <CircularProgress size={18} color="inherit" />
+              ) : (
+                <ArrowForwardIcon />
+              )
+            }
             sx={{ mt: 1, py: 1.2 }}
           >
             {loading ? "Connexion..." : "Se connecter"}

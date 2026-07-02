@@ -97,7 +97,11 @@ export default function AgentDashboard() {
     });
 
     socket.on("messagesSeen", (data) => {
-      if (selected && data.conversationId?.toString() !== selected._id?.toString()) return;
+      if (
+        selected &&
+        data.conversationId?.toString() !== selected._id?.toString()
+      )
+        return;
       setMessages((prev) =>
         prev.map((msg) => {
           if (
@@ -147,7 +151,9 @@ export default function AgentDashboard() {
   const replyMessage = async () => {
     if (!contenu.trim() || !selected) return;
     try {
-      await axios.post(`/messages/conversations/${selected._id}/reply`, { contenu });
+      await axios.post(`/messages/conversations/${selected._id}/reply`, {
+        contenu,
+      });
       setContenu("");
     } catch (err) {
       console.error(err);
@@ -173,7 +179,8 @@ export default function AgentDashboard() {
 
   const activeConvs = conversations.filter((c) => c.status !== "closed");
   const closedConvs = conversations.filter((c) => c.status === "closed");
-  const displayedConvs = activeTab === "conversations" ? activeConvs : closedConvs;
+  const displayedConvs =
+    activeTab === "conversations" ? activeConvs : closedConvs;
 
   const navItems = [
     {
@@ -193,7 +200,13 @@ export default function AgentDashboard() {
   const showChat = !isMobile || mobilePanel === "chat";
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh" }}>
+    <Box
+      sx={{
+        display: "flex",
+        height: "100vh",
+        overflow: "hidden",
+      }}
+    >
       <AppSidebar
         mobileOpen={sidebarOpen}
         onMobileClose={() => setSidebarOpen(false)}
@@ -217,6 +230,7 @@ export default function AgentDashboard() {
           display: "flex",
           minWidth: 0,
           ml: { md: 0 },
+          overflow: "hidden",
         }}
       >
         {showList && (
@@ -242,7 +256,9 @@ export default function AgentDashboard() {
                 <Box>
                   <Stack direction="row" spacing={1} alignItems="center">
                     <Typography variant="h6" fontWeight={700}>
-                      {activeTab === "conversations" ? "Conversations" : "Historique"}
+                      {activeTab === "conversations"
+                        ? "Conversations"
+                        : "Historique"}
                     </Typography>
                     <Chip label={displayedConvs.length} size="small" />
                   </Stack>
@@ -255,7 +271,13 @@ export default function AgentDashboard() {
               </Stack>
             </Box>
 
-            <Box sx={{ flex: 1, overflowY: "auto" }}>
+            <Box
+              sx={{
+                flex: 1,
+                overflowY: "auto",
+                minHeight: 0,
+              }}
+            >
               {displayedConvs.length === 0 ? (
                 <Box sx={{ p: 4, textAlign: "center" }}>
                   <Typography fontWeight={600}>Aucune discussion</Typography>
@@ -278,7 +300,11 @@ export default function AgentDashboard() {
                   >
                     <UserAvatar name={conv.clientId?.nom || "C"} size="md" />
                     <Box sx={{ ml: 1.5, flex: 1, minWidth: 0 }}>
-                      <Stack direction="row" justifyContent="space-between" alignItems="center">
+                      <Stack
+                        direction="row"
+                        justifyContent="space-between"
+                        alignItems="center"
+                      >
                         <Typography variant="body2" fontWeight={600} noWrap>
                           {conv.clientId?.nom || "Client"}
                         </Typography>
@@ -286,10 +312,20 @@ export default function AgentDashboard() {
                           {formatTime(conv.updatedAt)}
                         </Typography>
                       </Stack>
-                      <Typography variant="body2" color="text.secondary" noWrap sx={{ mt: 0.25 }}>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        noWrap
+                        sx={{ mt: 0.25 }}
+                      >
                         {conv.lastMessage || "Message initial..."}
                       </Typography>
-                      <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        alignItems="center"
+                        sx={{ mt: 0.5 }}
+                      >
                         <Chip
                           label={conv.priority || "normal"}
                           size="small"
@@ -310,7 +346,17 @@ export default function AgentDashboard() {
         )}
 
         {showChat && (
-          <Box sx={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+          <Box
+            sx={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              minWidth: 0,
+              height: "100%",
+              overflow: "hidden",
+              minHeight: 0,
+            }}
+          >
             {selected ? (
               <>
                 <Paper
@@ -335,7 +381,10 @@ export default function AgentDashboard() {
                     >
                       <ArrowBackIcon />
                     </IconButton>
-                    <UserAvatar name={selected.clientId?.nom || "C"} size="lg" />
+                    <UserAvatar
+                      name={selected.clientId?.nom || "C"}
+                      size="lg"
+                    />
                     <Box>
                       <Typography variant="subtitle1" fontWeight={700}>
                         {selected.clientId?.nom || "Client"}
@@ -356,7 +405,18 @@ export default function AgentDashboard() {
                   </Button>
                 </Paper>
 
-                <Box sx={{ flex: 1, overflowY: "auto", p: 2, display: "flex", flexDirection: "column", gap: 1.5 }}>
+                <Box
+                  sx={{
+                    flex: 1,
+                    minHeight: 0,
+                    overflowY: "auto",
+                    overflowX: "hidden",
+                    p: 2,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 1.5,
+                  }}
+                >
                   {messages.length === 0 ? (
                     <Box sx={{ textAlign: "center", pt: 6 }}>
                       <Typography variant="h6">Conversation ouverte</Typography>
@@ -385,7 +445,13 @@ export default function AgentDashboard() {
 
                 <Paper
                   elevation={0}
-                  sx={{ p: 2, borderTop: 1, borderColor: "divider", bgcolor: "background.paper" }}
+                  sx={{
+                    p: 2,
+                    borderTop: 1,
+                    borderColor: "divider",
+                    bgcolor: "background.paper",
+                    flexShrink: 0,
+                  }}
                 >
                   <Stack direction="row" spacing={1}>
                     <TextField
@@ -419,12 +485,15 @@ export default function AgentDashboard() {
                   textAlign: "center",
                 }}
               >
-                <ChatIcon sx={{ fontSize: 64, color: "text.disabled", mb: 2 }} />
+                <ChatIcon
+                  sx={{ fontSize: 64, color: "text.disabled", mb: 2 }}
+                />
                 <Typography variant="h6" gutterBottom>
                   Sélectionnez une conversation
                 </Typography>
                 <Typography color="text.secondary">
-                  Les messages du client apparaîtront ici une fois la session ouverte.
+                  Les messages du client apparaîtront ici une fois la session
+                  ouverte.
                 </Typography>
               </Box>
             )}
