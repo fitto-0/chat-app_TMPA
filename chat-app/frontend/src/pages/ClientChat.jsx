@@ -28,6 +28,7 @@ export default function ClientChat() {
   const [isClosed, setIsClosed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(true);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const bottomRef = useRef(null);
@@ -45,28 +46,6 @@ export default function ClientChat() {
       console.error(err);
     }
   }, []);
-
-  useEffect(() => {
-    if (!user) return;
-
-    const loadConversation = async () => {
-      try {
-        const res = await axios.get("/messages/conversations");
-        const active = res.data.find((c) => c.status !== "closed");
-        if (active) {
-          const msgRes = await axios.get(`/messages/conversations/${active._id}`);
-          setConversationId(active._id);
-          setMessages(msgRes.data.messages || []);
-          setIsClosed(active.status === "closed");
-          socket.emit("joinConversation", active._id);
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    loadConversation();
-  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -104,14 +83,6 @@ export default function ClientChat() {
   }, [user, isOwnMessage]);
 
   useEffect(() => {
-    if (!conversationId || !isOpen || !user) return;
-    const hasUnreadFromOther = messages.some(
-      (msg) => !isOwnMessage(msg) && !msg.isRead,
-    );
-    if (hasUnreadFromOther) markAsRead(conversationId);
-  }, [conversationId, isOpen, messages, user, isOwnMessage, markAsRead]);
-
-  useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
@@ -130,6 +101,7 @@ export default function ClientChat() {
       socket.emit("joinConversation", res.data.conversation._id);
       setIsClosed(false);
       setContenu("");
+      setShowWelcome(false);
     } catch (err) {
       console.error(err);
     } finally {
@@ -138,6 +110,10 @@ export default function ClientChat() {
   };
 
   const handleLogout = () => {
+    setMessages([]);
+    setConversationId(null);
+    setIsClosed(false);
+    setShowWelcome(true);
     logout();
     navigate("/login");
   };
@@ -151,6 +127,9 @@ export default function ClientChat() {
           px: 2,
           maxWidth: 720,
           mx: "auto",
+          filter: isOpen ? "blur(5px)" : "none",
+          transition: "filter 0.3s ease",
+          pointerEvents: isOpen ? "none" : "auto",
         }}
       >
         <Box component="img" src={logo} alt="Tanger Med" sx={{ maxWidth: 180, mb: 3 }} />
@@ -269,7 +248,7 @@ export default function ClientChat() {
           </Box>
 
           <Box sx={{ flex: 1, overflowY: "auto", p: 2, display: "flex", flexDirection: "column", gap: 1.5 }}>
-            {messages.length === 0 ? (
+            {(messages.length === 0 && showWelcome) ? (
               <Box sx={{ textAlign: "center", py: 4 }}>
                 <Typography variant="subtitle1" fontWeight={600}>
                   Prêt à vous aider
